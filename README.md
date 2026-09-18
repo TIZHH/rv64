@@ -6,10 +6,9 @@ pipeline.
 
 ## Current milestone
 
-The complete SC-08 single-cycle RV64I implementation is implemented. It
-supports integer ALU operations, immediate and upper-immediate operations,
-branches, jumps, loads, stores, and RV64 word operations. Illegal instructions
-are exposed through the `illegal_instruction` simulation output.
+The complete SC-08 single-cycle RV64I implementation and PL-06 five-stage
+pipeline are implemented. The pipeline includes EX/MEM and MEM/WB forwarding,
+load-use stalls, and control-flow flushing.
 
 ## Requirements
 
@@ -23,11 +22,14 @@ are exposed through the `illegal_instruction` simulation output.
 make help
 make lint
 make test
+make pipeline-lint
+make pipeline-test
 ```
 
 `make test` builds the Verilator model and runs the single-cycle RV64I
 regression, including focused arithmetic, control-flow, memory, word-operation,
-and illegal-instruction checks.
+and illegal-instruction checks. `make pipeline-test` runs the same architectural
+programs through the five-stage implementation.
 
 ## Scope
 
