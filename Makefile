@@ -22,6 +22,7 @@ help:
 	@echo "  make build  Build the Verilator simulator"
 	@echo "  make lint   Lint the current RTL"
 	@echo "  make test   Build and run the RV64I single-cycle regression"
+	@echo "  make pipeline-lint  Lint the five-stage RTL"
 	@echo "  make pipeline-test  Build and run the five-stage regression"
 	@echo "  make clean  Remove generated build output"
 
