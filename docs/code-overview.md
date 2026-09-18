@@ -1,7 +1,7 @@
 # 当前代码介绍
 
-本项目目前已经完成一个可运行的单周期 RV64I CPU，并使用 Verilator
-进行构建和功能验证。
+本项目目前已经完成单周期 RV64I CPU 和五级流水线 RV64I CPU，并使用
+Verilator 进行构建和功能验证。
 
 ## 代码结构
 
@@ -25,6 +25,16 @@
 连接解码器、寄存器文件和 ALU，完成单周期取指、执行、访存、写回和
 下一条 PC 计算。该模块提供简单的指令和数据存储器接口，并输出非法
 指令状态和部分调试寄存器。
+
+### `rtl/pipeline/`
+
+包含五级流水线实现：
+
+- `pipeline_cpu.sv`：保存 IF/ID、ID/EX、EX/MEM、MEM/WB 状态
+- `pipeline_execute.sv`：EX 阶段 ALU、前递和分支目标计算
+- `pipeline_hazard.sv`：检测 load-use 依赖并请求停顿
+- `pipeline_writeback.sv`：处理 MEM/WB 写回和加载扩展
+- `pipeline_memory_port.sv`：生成数据存储器读写信号
 
 ### `sim/verilator/tb_single_cycle.cpp`
 
@@ -50,10 +60,10 @@ make test
 ```
 
 `make lint` 使用 Verilator 检查 RTL；`make test` 会构建仿真程序并运行
-完整的单周期 RV64I 回归测试。
+完整的单周期 RV64I 回归测试。`make pipeline-lint` 和
+`make pipeline-test` 分别检查和运行五级流水线。
 
 ## 当前范围
 
-目前只实现 RV64I 基础整数指令集和单周期架构。CSR、中断、特权模式、
-缓存、虚拟内存、乘除法扩展和外设均不在当前范围内。五级流水线将在
-后续阶段单独实现。
+目前只实现 RV64I 基础整数指令集、单周期架构和五级流水线。CSR、中断、
+特权模式、缓存、虚拟内存、乘除法扩展和外设均不在当前范围内。
