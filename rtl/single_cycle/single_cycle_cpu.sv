@@ -110,6 +110,7 @@ module single_cycle_cpu (
             3'd1: writeback_data = load_writeback;
             3'd2: writeback_data = pc + 64'd4;
             3'd3: writeback_data = immediate;
+            3'd4: writeback_data = pc + immediate;
             default: writeback_data = alu_result;
         endcase
 

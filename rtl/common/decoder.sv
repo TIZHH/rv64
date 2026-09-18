@@ -48,6 +48,7 @@ module decoder (
     localparam logic [2:0] WB_LOAD = 3'd1;
     localparam logic [2:0] WB_PC4 = 3'd2;
     localparam logic [2:0] WB_IMM = 3'd3;
+    localparam logic [2:0] WB_AUIPC = 3'd4;
 
     always_comb begin
         valid = 1'b0;
@@ -141,7 +142,7 @@ module decoder (
                 reg_write = 1'b1;
                 alu_src_imm = 1'b1;
                 immediate = {{32{instruction[31]}}, instruction[31:12], 12'd0};
-                writeback_source = (instruction[6:0] == OP_LUI) ? WB_IMM : WB_ALU;
+                writeback_source = (instruction[6:0] == OP_LUI) ? WB_IMM : WB_AUIPC;
             end
             OP_LOAD: begin
                 if (instruction[14:12] == 3'b000 || instruction[14:12] == 3'b001 || instruction[14:12] == 3'b010 || instruction[14:12] == 3'b011 || instruction[14:12] == 3'b100 || instruction[14:12] == 3'b101 || instruction[14:12] == 3'b110) begin
