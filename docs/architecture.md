@@ -2,19 +2,20 @@
 
 ## Current design
 
-The current SC-00 design is a single SystemVerilog module named
-`single_cycle_cpu`. It exposes a clock, synchronous active-high reset, and the
-64-bit program counter for simulation visibility.
+The current SC-08 design is a single-cycle SystemVerilog CPU named
+`single_cycle_cpu`. The datapath is split into a decoder, ALU, and register file.
+Instruction and data memory are simple synchronous-testbench-facing interfaces;
+there is no bus protocol or cache.
 
 On a rising clock edge:
 
 - reset sets the PC to zero;
-- otherwise the PC advances by four bytes.
+- otherwise the decoded instruction writes architectural state and the PC takes
+  the sequential or control-flow target.
 
-The Verilator C++ testbench drives reset and clock edges directly and checks the
-observable PC after each cycle. This provides the build and simulation base for
-SC-01, where instruction fetch, ADDI decode, a register file, immediate
-generation, ALU addition, and writeback will be added.
+The Verilator C++ testbench supplies instruction words, models byte-addressed
+memory, and checks the resulting stores. This keeps architectural behavior
+observable without adding a hardware bus.
 
 ## Planned structure
 
@@ -24,7 +25,18 @@ generation, ALU addition, and writeback will be added.
 - `sim/verilator/`: Verilator testbench code
 - `tests/asm/`: focused assembly tests added with instruction support
 
-## Current limitations
+## Supported instructions
 
-No instructions, register file, memory model, or completion protocol exist yet.
-The PC-only shell is solely the SC-00 clock/reset verification target.
+The implementation supports the RV64I base integer instruction groups:
+
+- `ADD`, `SUB`, shifts, signed/unsigned compares, and bitwise register ALU
+- immediate ALU operations and immediate shifts
+- `LUI` and `AUIPC`
+- `JAL`, `JALR`, and all six conditional branches
+- `LB`, `LH`, `LW`, `LD`, `LBU`, `LHU`, and `LWU`
+- `SB`, `SH`, `SW`, and `SD`
+- `ADDIW`, immediate word shifts, and register word ALU operations
+
+The CPU does not yet implement the five-stage pipeline. Alignment exceptions,
+privilege features, CSRs, interrupts, and excluded extensions remain out of
+scope.
