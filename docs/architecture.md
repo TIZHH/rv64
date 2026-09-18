@@ -2,10 +2,10 @@
 
 ## Current design
 
-The current SC-08 design is a single-cycle SystemVerilog CPU named
-`single_cycle_cpu`. The datapath is split into a decoder, ALU, and register file.
-Instruction and data memory are simple synchronous-testbench-facing interfaces;
-there is no bus protocol or cache.
+The project contains two implementations: `single_cycle_cpu` is the reference
+architecture, and `pipeline_cpu` is a five-stage IF/ID/EX/MEM/WB implementation.
+Both use the shared decoder, ALU, and register file. Instruction and data memory
+are simple testbench-facing interfaces; there is no bus protocol or cache.
 
 On a rising clock edge:
 
@@ -13,15 +13,18 @@ On a rising clock edge:
 - otherwise the decoded instruction writes architectural state and the PC takes
   the sequential or control-flow target.
 
-The Verilator C++ testbench supplies instruction words, models byte-addressed
-memory, and checks the resulting stores. This keeps architectural behavior
+The Verilator C++ testbenches supply instruction words, model byte-addressed
+memory, and check the resulting stores. This keeps architectural behavior
 observable without adding a hardware bus.
+
+The pipeline resolves branches and jumps in EX, forwards results from EX/MEM and
+MEM/WB, and inserts a bubble for a load-use dependency.
 
 ## Planned structure
 
 - `rtl/common/`: reusable datapath modules
 - `rtl/single_cycle/`: single-cycle CPU integration
-- `rtl/pipeline/`: future five-stage implementation
+- `rtl/pipeline/`: five-stage implementation and hazard units
 - `sim/verilator/`: Verilator testbench code
 - `tests/asm/`: focused assembly tests added with instruction support
 
@@ -37,6 +40,5 @@ The implementation supports the RV64I base integer instruction groups:
 - `SB`, `SH`, `SW`, and `SD`
 - `ADDIW`, immediate word shifts, and register word ALU operations
 
-The CPU does not yet implement the five-stage pipeline. Alignment exceptions,
-privilege features, CSRs, interrupts, and excluded extensions remain out of
-scope.
+Alignment exceptions, privilege features, CSRs, interrupts, and excluded
+extensions remain out of scope.
