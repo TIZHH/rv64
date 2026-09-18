@@ -6,9 +6,10 @@ pipeline.
 
 ## Current milestone
 
-SC-00 project bootstrap is implemented. The single-cycle shell contains a
-64-bit program counter that resets to zero and advances by four each cycle. No
-instructions are decoded or executed yet.
+The complete SC-08 single-cycle RV64I implementation is implemented. It
+supports integer ALU operations, immediate and upper-immediate operations,
+branches, jumps, loads, stores, and RV64 word operations. Illegal instructions
+are exposed through the `illegal_instruction` simulation output.
 
 ## Requirements
 
@@ -24,8 +25,9 @@ make lint
 make test
 ```
 
-`make test` builds the Verilator model and runs a bounded smoke test that checks
-reset and sequential PC advancement.
+`make test` builds the Verilator model and runs the single-cycle RV64I
+regression, including focused arithmetic, control-flow, memory, word-operation,
+and illegal-instruction checks.
 
 ## Scope
 
