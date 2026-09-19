@@ -5,6 +5,15 @@ The repository preserves the original single-cycle implementation in
 `rtl/single_cycle_modular/` and is intended to be easier to study one concern
 at a time.
 
+## Full signal diagram
+
+- [SVG signal diagram](single-cycle-modular.svg)
+- [Mermaid source](single-cycle-modular.mmd)
+
+The SVG is the primary reading diagram. Blue wires are data/address buses,
+orange wires are control signals, green wires are PC/state paths, purple wires
+are immediates, and dashed gray wires are clock/reset or debug paths.
+
 ## Datapath modules
 
 ```text
