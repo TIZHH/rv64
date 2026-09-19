@@ -22,6 +22,9 @@ load-use stalls, and control-flow flushing.
 make help
 make lint
 make test
+make modular-lint
+make modular-test
+make file-memory-test
 make pipeline-lint
 make pipeline-test
 ```
@@ -30,6 +33,14 @@ make pipeline-test
 regression, including focused arithmetic, control-flow, memory, word-operation,
 and illegal-instruction checks. `make pipeline-test` runs the same architectural
 programs through the five-stage implementation.
+
+The original `single_cycle_cpu` remains the reference implementation. The
+new `single_cycle_core` keeps the same behavior but splits PC state, next-PC
+selection, branch comparison, memory formatting, and writeback into separate
+modules. `make modular-test` runs the same regression against this refactored
+core. `make file-memory-test` runs the file-backed system wrapper, which loads
+instructions from `sim/images/instruction.hex` and data bytes from
+`sim/images/data.hex`.
 
 ## Scope
 
