@@ -1,0 +1,277 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2600" height="1650" viewBox="0 0 2600 1650">
+  <defs>
+    <marker id="arrow-data" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#2367c9"/>
+    </marker>
+    <marker id="arrow-control" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#d56b1f"/>
+    </marker>
+    <marker id="arrow-state" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#18865b"/>
+    </marker>
+    <marker id="arrow-imm" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#7b45a5"/>
+    </marker>
+    <marker id="arrow-clock" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#5f6875"/>
+    </marker>
+    <style>
+      .title { font: 700 34px sans-serif; fill: #182333; }
+      .subtitle { font: 400 18px sans-serif; fill: #526173; }
+      .group-title { font: 700 22px sans-serif; fill: #344054; }
+      .box-title { font: 700 20px monospace; fill: #172033; }
+      .port { font: 400 15px monospace; fill: #39485c; }
+      .signal { font: 600 15px monospace; paint-order: stroke; stroke: #f8fafc; stroke-width: 5px; stroke-linejoin: round; }
+      .small { font: 400 14px sans-serif; fill: #526173; }
+      .note { font: 400 16px sans-serif; fill: #39485c; }
+      .module { fill: #ffffff; stroke: #8ea0b7; stroke-width: 2; rx: 12; }
+      .memory { fill: #f1f7ff; stroke: #5b8fd8; stroke-width: 2; rx: 12; }
+      .core { fill: #fbfcfe; stroke: #98a6b8; stroke-width: 3; stroke-dasharray: 10 7; rx: 18; }
+      .system { fill: #f8fafc; stroke: #64748b; stroke-width: 3; stroke-dasharray: 12 8; rx: 22; }
+      .data { stroke: #2367c9; stroke-width: 3; fill: none; marker-end: url(#arrow-data); }
+      .control { stroke: #d56b1f; stroke-width: 2.5; fill: none; marker-end: url(#arrow-control); }
+      .state { stroke: #18865b; stroke-width: 3; fill: none; marker-end: url(#arrow-state); }
+      .imm { stroke: #7b45a5; stroke-width: 2.5; fill: none; marker-end: url(#arrow-imm); }
+      .clock { stroke: #5f6875; stroke-width: 2; fill: none; stroke-dasharray: 7 5; marker-end: url(#arrow-clock); }
+      .plain { stroke: #5f6875; stroke-width: 2; fill: none; stroke-dasharray: 7 5; }
+      .legend-line { stroke-width: 4; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="2600" height="1650" fill="#f8fafc"/>
+  <text x="70" y="65" class="title">RV64I Modular Single-Cycle CPU</text>
+  <text x="70" y="98" class="subtitle">Every module port and inter-module signal shown explicitly | one instruction commits on each rising clock edge</text>
+
+  <!-- System boundary -->
+  <rect x="40" y="135" width="2520" height="1435" class="system"/>
+  <text x="70" y="172" class="group-title">single_cycle_file_system.sv</text>
+
+  <!-- External signals -->
+  <text x="70" y="225" class="box-title">External</text>
+  <text x="70" y="255" class="port">clk</text>
+  <text x="70" y="280" class="port">reset</text>
+  <text x="70" y="305" class="port">pc</text>
+  <text x="70" y="330" class="port">illegal_instruction</text>
+  <text x="70" y="355" class="port">debug_x10 / debug_x31</text>
+  <text x="70" y="380" class="port">debug_memory_word</text>
+  <path d="M145 250 H185" class="clock"/>
+  <path d="M145 275 H185" class="clock"/>
+
+  <!-- Memories -->
+  <rect x="190" y="205" width="330" height="210" class="memory"/>
+  <text x="215" y="240" class="box-title">instruction_memory</text>
+  <text x="215" y="272" class="port">address[63:0]</text>
+  <text x="215" y="297" class="port">instruction[31:0]</text>
+  <text x="215" y="335" class="small">256 × 32-bit words</text>
+  <text x="215" y="360" class="small">$readmemh(instruction.hex)</text>
+  <text x="215" y="390" class="small">combinational read</text>
+
+  <rect x="190" y="590" width="330" height="300" class="memory"/>
+  <text x="215" y="625" class="box-title">data_memory</text>
+  <text x="215" y="657" class="port">clk</text>
+  <text x="215" y="682" class="port">address[63:0]</text>
+  <text x="215" y="707" class="port">read_enable / read_data[63:0]</text>
+  <text x="215" y="732" class="port">write_data[63:0]</text>
+  <text x="215" y="757" class="port">write_mask[7:0]</text>
+  <text x="215" y="782" class="port">write_enable</text>
+  <text x="215" y="820" class="small">4096 byte-addressed bytes</text>
+  <text x="215" y="845" class="small">$readmemh(data.hex)</text>
+  <text x="215" y="870" class="small">read combinational, write on clk</text>
+
+  <!-- Core boundary -->
+  <rect x="570" y="205" width="1930" height="1190" class="core"/>
+  <text x="600" y="242" class="group-title">single_cycle_core.sv</text>
+
+  <!-- PC -->
+  <rect x="650" y="285" width="250" height="160" class="module"/>
+  <text x="680" y="320" class="box-title">pc_register</text>
+  <text x="680" y="350" class="port">clk</text>
+  <text x="680" y="375" class="port">reset</text>
+  <text x="680" y="400" class="port">next_pc[63:0]</text>
+  <text x="680" y="425" class="port">pc[63:0]</text>
+
+  <!-- Instruction/decoder -->
+  <rect x="1000" y="285" width="330" height="270" class="module"/>
+  <text x="1030" y="320" class="box-title">decoder</text>
+  <text x="1030" y="350" class="port">instruction[31:0]</text>
+  <text x="1030" y="378" class="port">valid</text>
+  <text x="1030" y="400" class="port">reg_write, mem_read</text>
+  <text x="1030" y="422" class="port">mem_write, alu_src_imm</text>
+  <text x="1030" y="444" class="port">branch, jump, jump_register</text>
+  <text x="1030" y="466" class="port">branch_type[2:0]</text>
+  <text x="1030" y="488" class="port">memory_size, unsigned</text>
+  <text x="1030" y="510" class="port">alu_operation[4:0]</text>
+  <text x="1030" y="532" class="port">writeback_source[2:0]</text>
+  <text x="1030" y="554" class="port">immediate[63:0]</text>
+
+  <!-- Register file -->
+  <rect x="1000" y="690" width="360" height="275" class="module"/>
+  <text x="1030" y="725" class="box-title">regfile</text>
+  <text x="1030" y="755" class="port">clk, reset</text>
+  <text x="1030" y="777" class="port">write_enable</text>
+  <text x="1030" y="799" class="port">write_address[4:0]</text>
+  <text x="1030" y="821" class="port">write_data[63:0]</text>
+  <text x="1030" y="849" class="port">read_address_a / read_data_a</text>
+  <text x="1030" y="871" class="port">read_address_b / read_data_b</text>
+  <text x="1030" y="907" class="port">debug_x10, debug_x31</text>
+  <text x="1030" y="939" class="small">x0 reads as zero; x0 writes ignored</text>
+
+  <!-- ALU -->
+  <rect x="1480" y="690" width="280" height="190" class="module"/>
+  <text x="1510" y="725" class="box-title">alu</text>
+  <text x="1510" y="755" class="port">operation[4:0]</text>
+  <text x="1510" y="780" class="port">left[63:0]</text>
+  <text x="1510" y="805" class="port">right[63:0]</text>
+  <text x="1510" y="840" class="port">result[63:0]</text>
+  <text x="1510" y="866" class="small">ADD, SUB, shifts, compare, logic</text>
+
+  <!-- Branch -->
+  <rect x="1480" y="330" width="280" height="155" class="module"/>
+  <text x="1510" y="365" class="box-title">branch_unit</text>
+  <text x="1510" y="395" class="port">branch_type[2:0]</text>
+  <text x="1510" y="420" class="port">left[63:0], right[63:0]</text>
+  <text x="1510" y="450" class="port">taken</text>
+  <text x="1510" y="475" class="small">BEQ/BNE/BLT/BGE/BLTU/BGEU</text>
+
+  <!-- Next PC -->
+  <rect x="1940" y="300" width="430" height="265" class="module"/>
+  <text x="1970" y="335" class="box-title">next_pc_logic</text>
+  <text x="1970" y="365" class="port">pc[63:0]</text>
+  <text x="1970" y="387" class="port">immediate[63:0]</text>
+  <text x="1970" y="409" class="port">register_a[63:0]</text>
+  <text x="1970" y="431" class="port">branch, branch_taken</text>
+  <text x="1970" y="453" class="port">jump, jump_register</text>
+  <text x="1970" y="485" class="port">next_pc[63:0]</text>
+  <text x="1970" y="525" class="small">default: pc + 4</text>
+  <text x="1970" y="548" class="small">target: branch/JAL/JALR</text>
+
+  <!-- Memory formatter -->
+  <rect x="1900" y="690" width="460" height="265" class="module"/>
+  <text x="1930" y="725" class="box-title">memory_access</text>
+  <text x="1930" y="755" class="port">mem_read, mem_write</text>
+  <text x="1930" y="777" class="port">memory_size, memory_unsigned</text>
+  <text x="1930" y="799" class="port">byte_offset[2:0]</text>
+  <text x="1930" y="821" class="port">store_value[63:0]</text>
+  <text x="1930" y="843" class="port">read_data[63:0]</text>
+  <text x="1930" y="875" class="port">load_value[63:0]</text>
+  <text x="1930" y="897" class="port">write_data[63:0]</text>
+  <text x="1930" y="919" class="port">write_mask[7:0]</text>
+  <text x="1930" y="941" class="port">read_enable, write_enable</text>
+
+  <!-- Writeback -->
+  <rect x="1480" y="1080" width="430" height="215" class="module"/>
+  <text x="1510" y="1115" class="box-title">writeback_mux</text>
+  <text x="1510" y="1145" class="port">source[2:0]</text>
+  <text x="1510" y="1167" class="port">alu_result[63:0]</text>
+  <text x="1510" y="1189" class="port">load_value[63:0]</text>
+  <text x="1510" y="1211" class="port">pc[63:0], immediate[63:0]</text>
+  <text x="1510" y="1245" class="port">writeback_data[63:0]</text>
+  <text x="1510" y="1275" class="small">ALU / LOAD / PC+4 / IMM / PC+IMM</text>
+
+  <!-- Main data/control wires -->
+  <path d="M900 365 H1000" class="data"/>
+  <text x="920" y="352" class="signal" fill="#2367c9">instruction[31:0]</text>
+
+  <path d="M775 445 V535 H850 V535 H850 V205 H355" class="state"/>
+  <text x="785" y="520" class="signal" fill="#18865b">pc[63:0]</text>
+  <path d="M520 275 H650" class="state"/>
+  <text x="535" y="263" class="signal" fill="#18865b">address = pc</text>
+
+  <path d="M900 350 H960 V350 H1000" class="clock"/>
+  <path d="M185 250 H650 V350" class="clock"/>
+  <path d="M185 275 H630 V375" class="clock"/>
+
+  <!-- decoder to regfile -->
+  <path d="M1160 555 V650 H1080 V690" class="control"/>
+  <text x="1090" y="642" class="signal" fill="#d56b1f">rs1/rs2/rd fields</text>
+  <path d="M1190 555 V635 H1260 V690" class="imm"/>
+  <text x="1210" y="625" class="signal" fill="#7b45a5">immediate</text>
+  <path d="M1115 555 V675 H1510 V690" class="control"/>
+  <text x="1330" y="665" class="signal" fill="#d56b1f">alu_operation</text>
+  <path d="M1280 555 V610 H2020 V690" class="control"/>
+  <text x="1570" y="600" class="signal" fill="#d56b1f">memory controls</text>
+
+  <!-- regfile to ALU -->
+  <path d="M1360 840 H1480" class="data"/>
+  <text x="1380" y="828" class="signal" fill="#2367c9">register_b[63:0]</text>
+  <path d="M1360 820 H1420 V770 H1480" class="data"/>
+  <text x="1370" y="755" class="signal" fill="#2367c9">register_a[63:0]</text>
+  <path d="M1360 800 H1400 V920 H1820 V820 H1900" class="data"/>
+  <text x="1550" y="908" class="signal" fill="#2367c9">store_value</text>
+  <path d="M1330 554 V595 H1430 V805 H1480" class="control"/>
+  <text x="1360" y="585" class="signal" fill="#d56b1f">alu_src_imm</text>
+  <path d="M1300 554 V580 H1450 V805 H1480" class="imm"/>
+  <text x="1320" y="570" class="signal" fill="#7b45a5">immediate</text>
+
+  <!-- ALU outputs -->
+  <path d="M1760 800 H1840 V770 H1900" class="data"/>
+  <text x="1775" y="785" class="signal" fill="#2367c9">alu_result = address</text>
+  <path d="M1760 840 H1820 V1167 H1480" class="data"/>
+  <text x="1770" y="1020" class="signal" fill="#2367c9">alu_result</text>
+
+  <!-- Branch paths -->
+  <path d="M1360 820 H1410 V420 H1480" class="data"/>
+  <text x="1415" y="410" class="signal" fill="#2367c9">register_a</text>
+  <path d="M1360 840 H1390 V440 H1480" class="data"/>
+  <text x="1395" y="470" class="signal" fill="#2367c9">register_b</text>
+  <path d="M1210 555 V610 H1450 V395 H1480" class="control"/>
+  <text x="1300" y="382" class="signal" fill="#d56b1f">branch_type</text>
+  <path d="M1760 450 H1870 V470 H1940" class="control"/>
+  <text x="1780" y="438" class="signal" fill="#d56b1f">branch_taken</text>
+
+  <!-- Next PC paths -->
+  <path d="M775 285 V260 H2160 V300" class="state"/>
+  <text x="1830" y="248" class="signal" fill="#18865b">pc</text>
+  <path d="M1260 555 V625 H2180 V300" class="imm"/>
+  <text x="2040" y="615" class="signal" fill="#7b45a5">immediate</text>
+  <path d="M1360 820 H1450 V590 H2220 V300" class="data"/>
+  <text x="1480" y="578" class="signal" fill="#2367c9">register_a</text>
+  <path d="M1280 555 V570 H2280 V300" class="control"/>
+  <text x="2300" y="350" class="signal" fill="#d56b1f">branch/jump</text>
+  <path d="M1940 485 H1850 V445 H900" class="state"/>
+  <text x="1530" y="430" class="signal" fill="#18865b">next_pc[63:0]</text>
+
+  <!-- Memory access to external data memory -->
+  <path d="M1760 800 H1810 V682 H520" class="data"/>
+  <text x="770" y="670" class="signal" fill="#2367c9">data_address[63:0]</text>
+  <path d="M1900 941 H1720 V730 H520" class="control"/>
+  <text x="1360" y="718" class="signal" fill="#d56b1f">read_enable / write_enable</text>
+  <path d="M1900 897 H1750 V757 H520" class="data"/>
+  <text x="1430" y="745" class="signal" fill="#2367c9">write_data[63:0]</text>
+  <path d="M1900 919 H1780 V782 H520" class="control"/>
+  <text x="1510" y="770" class="signal" fill="#d56b1f">write_mask[7:0]</text>
+  <path d="M520 707 H1770 V843 H1900" class="data"/>
+  <text x="910" y="695" class="signal" fill="#2367c9">read_data[63:0]</text>
+
+  <!-- Writeback -->
+  <path d="M1360 907 H1430 V1245 H1480" class="data"/>
+  <text x="1380" y="1080" class="signal" fill="#2367c9">load_value</text>
+  <path d="M1260 555 V1060 H1550 V1080" class="imm"/>
+  <text x="1280" y="1048" class="signal" fill="#7b45a5">immediate</text>
+  <path d="M775 285 V1050 H1660 V1080" class="state"/>
+  <text x="820" y="1035" class="signal" fill="#18865b">pc</text>
+  <path d="M1280 555 V1020 H1780 V1080" class="control"/>
+  <text x="1430" y="1008" class="signal" fill="#d56b1f">writeback_source</text>
+  <path d="M1695 1080 V1000 H930 V820 H1000" class="data"/>
+  <text x="1030" y="988" class="signal" fill="#2367c9">writeback_data</text>
+  <path d="M1110 690 V665 H980 V777 H1000" class="control"/>
+  <text x="920" y="655" class="signal" fill="#d56b1f">reg_write &amp;&amp; valid</text>
+
+  <!-- Outputs/debug -->
+  <path d="M1360 907 H1450 V1400 H100 V355" class="plain"/>
+  <text x="120" y="1425" class="signal" fill="#5f6875">debug_x10 / debug_x31</text>
+  <path d="M520 850 H590 V1460 H100 V380" class="plain"/>
+  <text x="120" y="1485" class="signal" fill="#5f6875">debug_memory_word</text>
+  <path d="M1330 378 H1380 V1370 H100 V330" class="plain"/>
+  <text x="120" y="1360" class="signal" fill="#5f6875">illegal_instruction = !valid</text>
+
+  <!-- Legend -->
+  <rect x="600" y="1450" width="1850" height="85" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" rx="10"/>
+  <text x="625" y="1480" class="box-title">Legend</text>
+  <path d="M780 1474 H870" class="data"/><text x="885" y="1480" class="small">data / address bus</text>
+  <path d="M1110 1474 H1200" class="control"/><text x="1215" y="1480" class="small">control signal</text>
+  <path d="M1420 1474 H1510" class="state"/><text x="1525" y="1480" class="small">PC / architectural state</text>
+  <path d="M1810 1474 H1900" class="imm"/><text x="1915" y="1480" class="small">immediate</text>
+  <path d="M2080 1474 H2170" class="clock"/><text x="2185" y="1480" class="small">clk / reset</text>
+  <text x="625" y="1510" class="small">All wires are shown at their logical module boundary; long routed wires are intentionally not collapsed.</text>
+</svg>

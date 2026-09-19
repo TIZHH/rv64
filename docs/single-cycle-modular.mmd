@@ -1,0 +1,58 @@
+flowchart LR
+    CLK([clk]) -.-> PC[pc_register]
+    RESET([reset]) -.-> PC
+
+    IM[instruction_memory\n256 x 32-bit\n$readmemh instruction.hex]
+    DM[data_memory\n4096 byte\n$readmemh data.hex]
+
+    DEC[decoder]
+    RF[regfile\nx0 hardwired zero]
+    ALU[alu]
+    BR[branch_unit]
+    NPC[next_pc_logic]
+    MA[memory_access]
+    WB[writeback_mux]
+
+    PC -- "pc[63:0] / address" --> IM
+    IM -- "instruction[31:0]" --> DEC
+    DEC -- "rs1/rs2/rd fields" --> RF
+    RF -- "register_a[63:0]" --> ALU
+    RF -- "register_b[63:0]" --> ALU
+    DEC -- "alu_src_imm" --> ALU
+    DEC -- "immediate[63:0]" --> ALU
+    DEC -- "alu_operation[4:0]" --> ALU
+    ALU -- "alu_result[63:0] / data_address" --> MA
+    ALU -- "alu_result[63:0]" --> WB
+
+    RF -- "register_a, register_b" --> BR
+    DEC -- "branch_type[2:0]" --> BR
+    BR -- "branch_taken" --> NPC
+    PC -- "pc[63:0]" --> NPC
+    DEC -- "immediate, branch, jump, jump_register" --> NPC
+    RF -- "register_a[63:0]" --> NPC
+    NPC -- "next_pc[63:0]" --> PC
+
+    DEC -- "mem_read, mem_write, memory_size, unsigned" --> MA
+    RF -- "store_value[63:0]" --> MA
+    MA -- "read_enable, address" --> DM
+    MA -- "write_enable, write_data, write_mask" --> DM
+    DM -- "read_data[63:0]" --> MA
+    MA -- "load_value[63:0]" --> WB
+
+    DEC -- "writeback_source[2:0]" --> WB
+    PC -- "pc[63:0]" --> WB
+    DEC -- "immediate[63:0]" --> WB
+    WB -- "writeback_data[63:0]" --> RF
+    DEC -- "reg_write & valid" --> RF
+
+    PC -. "debug pc" .-> OUT[debug / illegal outputs]
+    RF -. "debug_x10, debug_x31" .-> OUT
+    DEC -. "valid -> illegal_instruction" .-> OUT
+    DM -. "debug_memory_word" .-> OUT
+
+    classDef state fill:#e9f8f0,stroke:#18865b,stroke-width:2px;
+    classDef memory fill:#eef6ff,stroke:#5b8fd8,stroke-width:2px;
+    classDef control fill:#fff5e8,stroke:#d56b1f,stroke-width:2px;
+    class PC,NPC state;
+    class IM,DM memory;
+    class DEC,BR,MA,WB control;
