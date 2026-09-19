@@ -5,6 +5,42 @@ The repository preserves the original single-cycle implementation in
 `rtl/single_cycle_modular/` and is intended to be easier to study one concern
 at a time.
 
+## Port naming convention
+
+Every port in the modular single-cycle path and in `rtl/memory/` carries a
+directional suffix, so an instantiation shows the direction without opening the
+module:
+
+```text
+*_i    input to the module
+*_o    output from the module
+```
+
+Example:
+
+```systemverilog
+branch_unit branch_comparator (
+    .branch_type_i(branch_type),
+    .left_i(register_a),
+    .right_i(register_b),
+    .taken_o(branch_taken)
+);
+```
+
+The connected net keeps a plain value name (`branch_type`, `register_a`), which
+reads as "the value being carried", while the port name states the direction.
+
+The convention is applied to:
+
+- `rtl/single_cycle_modular/*.sv`
+- `rtl/memory/*.sv`
+
+The shared modules `rtl/common/decoder.sv`, `rtl/common/alu.sv`, and
+`rtl/common/regfile.sv` are intentionally left unchanged because the legacy
+single-cycle top and the pipeline also instantiate them. At the core, their
+connections still reveal direction through the net name, for example
+`.instruction(instruction_i)`.
+
 ## Full signal diagram
 
 - [SVG signal diagram](single-cycle-modular.svg)

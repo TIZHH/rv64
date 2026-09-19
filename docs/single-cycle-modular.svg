@@ -47,33 +47,35 @@
   <text x="70" y="172" class="group-title">single_cycle_file_system.sv</text>
 
   <!-- External signals -->
-  <text x="70" y="225" class="box-title">External</text>
-  <text x="70" y="255" class="port">clk</text>
-  <text x="70" y="280" class="port">reset</text>
-  <text x="70" y="305" class="port">pc</text>
-  <text x="70" y="330" class="port">illegal_instruction</text>
-  <text x="70" y="355" class="port">debug_x10 / debug_x31</text>
-  <text x="70" y="380" class="port">debug_memory_word</text>
+  <text x="70" y="225" class="box-title">External (single_cycle_file_system)</text>
+  <text x="70" y="255" class="port">clk_i</text>
+  <text x="70" y="280" class="port">reset_i</text>
+  <text x="70" y="305" class="port">pc_o</text>
+  <text x="70" y="330" class="port">illegal_instruction_o</text>
+  <text x="70" y="355" class="port">debug_x10_o / debug_x31_o</text>
+  <text x="70" y="380" class="port">debug_memory_word_o</text>
+  <text x="70" y="405" class="small">port convention: *_i input, *_o output</text>
   <path d="M145 250 H185" class="clock"/>
   <path d="M145 275 H185" class="clock"/>
 
   <!-- Memories -->
   <rect x="190" y="205" width="330" height="210" class="memory"/>
   <text x="215" y="240" class="box-title">instruction_memory</text>
-  <text x="215" y="272" class="port">address[63:0]</text>
-  <text x="215" y="297" class="port">instruction[31:0]</text>
+  <text x="215" y="272" class="port">address_i[63:0]</text>
+  <text x="215" y="297" class="port">instruction_o[31:0]</text>
   <text x="215" y="335" class="small">256 × 32-bit words</text>
   <text x="215" y="360" class="small">$readmemh(instruction.hex)</text>
   <text x="215" y="390" class="small">combinational read</text>
 
   <rect x="190" y="590" width="330" height="300" class="memory"/>
   <text x="215" y="625" class="box-title">data_memory</text>
-  <text x="215" y="657" class="port">clk</text>
-  <text x="215" y="682" class="port">address[63:0]</text>
-  <text x="215" y="707" class="port">read_enable / read_data[63:0]</text>
-  <text x="215" y="732" class="port">write_data[63:0]</text>
-  <text x="215" y="757" class="port">write_mask[7:0]</text>
-  <text x="215" y="782" class="port">write_enable</text>
+  <text x="215" y="657" class="port">clk_i</text>
+  <text x="215" y="682" class="port">address_i[63:0]</text>
+  <text x="215" y="707" class="port">read_enable_i / read_data_o[63:0]</text>
+  <text x="215" y="732" class="port">write_data_i[63:0]</text>
+  <text x="215" y="757" class="port">write_mask_i[7:0]</text>
+  <text x="215" y="782" class="port">write_enable_i</text>
+  <text x="215" y="807" class="port">debug_word_o[63:0]</text>
   <text x="215" y="820" class="small">4096 byte-addressed bytes</text>
   <text x="215" y="845" class="small">$readmemh(data.hex)</text>
   <text x="215" y="870" class="small">read combinational, write on clk</text>
@@ -85,15 +87,15 @@
   <!-- PC -->
   <rect x="650" y="285" width="250" height="160" class="module"/>
   <text x="680" y="320" class="box-title">pc_register</text>
-  <text x="680" y="350" class="port">clk</text>
-  <text x="680" y="375" class="port">reset</text>
-  <text x="680" y="400" class="port">next_pc[63:0]</text>
-  <text x="680" y="425" class="port">pc[63:0]</text>
+  <text x="680" y="350" class="port">clk_i</text>
+  <text x="680" y="375" class="port">reset_i</text>
+  <text x="680" y="400" class="port">next_pc_i[63:0]</text>
+  <text x="680" y="425" class="port">pc_o[63:0]</text>
 
   <!-- Instruction/decoder -->
   <rect x="1000" y="285" width="330" height="270" class="module"/>
-  <text x="1030" y="320" class="box-title">decoder</text>
-  <text x="1030" y="350" class="port">instruction[31:0]</text>
+  <text x="1030" y="320" class="box-title">decoder (shared)</text>
+  <text x="1030" y="350" class="port">instruction[31:0]  /  *i</text>
   <text x="1030" y="378" class="port">valid</text>
   <text x="1030" y="400" class="port">reg_write, mem_read</text>
   <text x="1030" y="422" class="port">mem_write, alu_src_imm</text>
@@ -102,11 +104,12 @@
   <text x="1030" y="488" class="port">memory_size, unsigned</text>
   <text x="1030" y="510" class="port">alu_operation[4:0]</text>
   <text x="1030" y="532" class="port">writeback_source[2:0]</text>
-  <text x="1030" y="554" class="port">immediate[63:0]</text>
+  <text x="1030" y="554" class="port">immediate[63:0]  /  *o</text>
+  <text x="1030" y="578" class="small">shared with legacy + pipeline; ports unchanged</text>
 
   <!-- Register file -->
   <rect x="1000" y="690" width="360" height="275" class="module"/>
-  <text x="1030" y="725" class="box-title">regfile</text>
+  <text x="1030" y="725" class="box-title">regfile (shared)</text>
   <text x="1030" y="755" class="port">clk, reset</text>
   <text x="1030" y="777" class="port">write_enable</text>
   <text x="1030" y="799" class="port">write_address[4:0]</text>
@@ -118,7 +121,7 @@
 
   <!-- ALU -->
   <rect x="1480" y="690" width="280" height="190" class="module"/>
-  <text x="1510" y="725" class="box-title">alu</text>
+  <text x="1510" y="725" class="box-title">alu (shared)</text>
   <text x="1510" y="755" class="port">operation[4:0]</text>
   <text x="1510" y="780" class="port">left[63:0]</text>
   <text x="1510" y="805" class="port">right[63:0]</text>
@@ -128,54 +131,54 @@
   <!-- Branch -->
   <rect x="1480" y="330" width="280" height="155" class="module"/>
   <text x="1510" y="365" class="box-title">branch_unit</text>
-  <text x="1510" y="395" class="port">branch_type[2:0]</text>
-  <text x="1510" y="420" class="port">left[63:0], right[63:0]</text>
-  <text x="1510" y="450" class="port">taken</text>
+  <text x="1510" y="395" class="port">branch_type_i[2:0]</text>
+  <text x="1510" y="420" class="port">left_i[63:0], right_i[63:0]</text>
+  <text x="1510" y="450" class="port">taken_o</text>
   <text x="1510" y="475" class="small">BEQ/BNE/BLT/BGE/BLTU/BGEU</text>
 
   <!-- Next PC -->
   <rect x="1940" y="300" width="430" height="265" class="module"/>
   <text x="1970" y="335" class="box-title">next_pc_logic</text>
-  <text x="1970" y="365" class="port">pc[63:0]</text>
-  <text x="1970" y="387" class="port">immediate[63:0]</text>
-  <text x="1970" y="409" class="port">register_a[63:0]</text>
-  <text x="1970" y="431" class="port">branch, branch_taken</text>
-  <text x="1970" y="453" class="port">jump, jump_register</text>
-  <text x="1970" y="485" class="port">next_pc[63:0]</text>
+  <text x="1970" y="365" class="port">pc_i[63:0]</text>
+  <text x="1970" y="387" class="port">immediate_i[63:0]</text>
+  <text x="1970" y="409" class="port">register_a_i[63:0]</text>
+  <text x="1970" y="431" class="port">branch_i, branch_taken_i</text>
+  <text x="1970" y="453" class="port">jump_i, jump_register_i</text>
+  <text x="1970" y="485" class="port">next_pc_o[63:0]</text>
   <text x="1970" y="525" class="small">default: pc + 4</text>
   <text x="1970" y="548" class="small">target: branch/JAL/JALR</text>
 
   <!-- Memory formatter -->
   <rect x="1900" y="690" width="460" height="265" class="module"/>
   <text x="1930" y="725" class="box-title">memory_access</text>
-  <text x="1930" y="755" class="port">mem_read, mem_write</text>
-  <text x="1930" y="777" class="port">memory_size, memory_unsigned</text>
-  <text x="1930" y="799" class="port">byte_offset[2:0]</text>
-  <text x="1930" y="821" class="port">store_value[63:0]</text>
-  <text x="1930" y="843" class="port">read_data[63:0]</text>
-  <text x="1930" y="875" class="port">load_value[63:0]</text>
-  <text x="1930" y="897" class="port">write_data[63:0]</text>
-  <text x="1930" y="919" class="port">write_mask[7:0]</text>
-  <text x="1930" y="941" class="port">read_enable, write_enable</text>
+  <text x="1930" y="755" class="port">mem_read_i, mem_write_i</text>
+  <text x="1930" y="777" class="port">memory_size_i, memory_unsigned_i</text>
+  <text x="1930" y="799" class="port">byte_offset_i[2:0]</text>
+  <text x="1930" y="821" class="port">store_value_i[63:0]</text>
+  <text x="1930" y="843" class="port">read_data_i[63:0]</text>
+  <text x="1930" y="875" class="port">load_value_o[63:0]</text>
+  <text x="1930" y="897" class="port">write_data_o[63:0]</text>
+  <text x="1930" y="919" class="port">write_mask_o[7:0]</text>
+  <text x="1930" y="941" class="port">read_enable_o, write_enable_o</text>
 
   <!-- Writeback -->
   <rect x="1480" y="1080" width="430" height="215" class="module"/>
   <text x="1510" y="1115" class="box-title">writeback_mux</text>
-  <text x="1510" y="1145" class="port">source[2:0]</text>
-  <text x="1510" y="1167" class="port">alu_result[63:0]</text>
-  <text x="1510" y="1189" class="port">load_value[63:0]</text>
-  <text x="1510" y="1211" class="port">pc[63:0], immediate[63:0]</text>
-  <text x="1510" y="1245" class="port">writeback_data[63:0]</text>
+  <text x="1510" y="1145" class="port">source_i[2:0]</text>
+  <text x="1510" y="1167" class="port">alu_result_i[63:0]</text>
+  <text x="1510" y="1189" class="port">load_value_i[63:0]</text>
+  <text x="1510" y="1211" class="port">pc_i[63:0], immediate_i[63:0]</text>
+  <text x="1510" y="1245" class="port">writeback_data_o[63:0]</text>
   <text x="1510" y="1275" class="small">ALU / LOAD / PC+4 / IMM / PC+IMM</text>
 
   <!-- Main data/control wires -->
   <path d="M900 365 H1000" class="data"/>
-  <text x="920" y="352" class="signal" fill="#2367c9">instruction[31:0]</text>
+  <text x="920" y="352" class="signal" fill="#2367c9">instruction_o → instruction_i</text>
 
   <path d="M775 445 V535 H850 V535 H850 V205 H355" class="state"/>
-  <text x="785" y="520" class="signal" fill="#18865b">pc[63:0]</text>
+  <text x="785" y="520" class="signal" fill="#18865b">pc_o[63:0]</text>
   <path d="M520 275 H650" class="state"/>
-  <text x="535" y="263" class="signal" fill="#18865b">address = pc</text>
+  <text x="535" y="263" class="signal" fill="#18865b">address_i = pc_o</text>
 
   <path d="M900 350 H960 V350 H1000" class="clock"/>
   <path d="M185 250 H650 V350" class="clock"/>
@@ -217,7 +220,7 @@
   <path d="M1210 555 V610 H1450 V395 H1480" class="control"/>
   <text x="1300" y="382" class="signal" fill="#d56b1f">branch_type</text>
   <path d="M1760 450 H1870 V470 H1940" class="control"/>
-  <text x="1780" y="438" class="signal" fill="#d56b1f">branch_taken</text>
+  <text x="1780" y="438" class="signal" fill="#d56b1f">taken_o → branch_taken_i</text>
 
   <!-- Next PC paths -->
   <path d="M775 285 V260 H2160 V300" class="state"/>
@@ -229,19 +232,19 @@
   <path d="M1280 555 V570 H2280 V300" class="control"/>
   <text x="2300" y="350" class="signal" fill="#d56b1f">branch/jump</text>
   <path d="M1940 485 H1850 V445 H900" class="state"/>
-  <text x="1530" y="430" class="signal" fill="#18865b">next_pc[63:0]</text>
+  <text x="1530" y="430" class="signal" fill="#18865b">next_pc_o → next_pc_i</text>
 
   <!-- Memory access to external data memory -->
   <path d="M1760 800 H1810 V682 H520" class="data"/>
-  <text x="770" y="670" class="signal" fill="#2367c9">data_address[63:0]</text>
+  <text x="770" y="670" class="signal" fill="#2367c9">data_address_o → address_i</text>
   <path d="M1900 941 H1720 V730 H520" class="control"/>
   <text x="1360" y="718" class="signal" fill="#d56b1f">read_enable / write_enable</text>
   <path d="M1900 897 H1750 V757 H520" class="data"/>
-  <text x="1430" y="745" class="signal" fill="#2367c9">write_data[63:0]</text>
+  <text x="1430" y="745" class="signal" fill="#2367c9">write_data_o → write_data_i</text>
   <path d="M1900 919 H1780 V782 H520" class="control"/>
-  <text x="1510" y="770" class="signal" fill="#d56b1f">write_mask[7:0]</text>
+  <text x="1510" y="770" class="signal" fill="#d56b1f">write_mask_o → write_mask_i</text>
   <path d="M520 707 H1770 V843 H1900" class="data"/>
-  <text x="910" y="695" class="signal" fill="#2367c9">read_data[63:0]</text>
+  <text x="910" y="695" class="signal" fill="#2367c9">read_data_o → read_data_i</text>
 
   <!-- Writeback -->
   <path d="M1360 907 H1430 V1245 H1480" class="data"/>
@@ -253,25 +256,26 @@
   <path d="M1280 555 V1020 H1780 V1080" class="control"/>
   <text x="1430" y="1008" class="signal" fill="#d56b1f">writeback_source</text>
   <path d="M1695 1080 V1000 H930 V820 H1000" class="data"/>
-  <text x="1030" y="988" class="signal" fill="#2367c9">writeback_data</text>
+  <text x="1030" y="988" class="signal" fill="#2367c9">writeback_data_o</text>
   <path d="M1110 690 V665 H980 V777 H1000" class="control"/>
   <text x="920" y="655" class="signal" fill="#d56b1f">reg_write &amp;&amp; valid</text>
 
   <!-- Outputs/debug -->
   <path d="M1360 907 H1450 V1400 H100 V355" class="plain"/>
-  <text x="120" y="1425" class="signal" fill="#5f6875">debug_x10 / debug_x31</text>
+  <text x="120" y="1425" class="signal" fill="#5f6875">debug_x10_o / debug_x31_o</text>
   <path d="M520 850 H590 V1460 H100 V380" class="plain"/>
-  <text x="120" y="1485" class="signal" fill="#5f6875">debug_memory_word</text>
+  <text x="120" y="1485" class="signal" fill="#5f6875">debug_memory_word_o</text>
   <path d="M1330 378 H1380 V1370 H100 V330" class="plain"/>
-  <text x="120" y="1360" class="signal" fill="#5f6875">illegal_instruction = !valid</text>
+  <text x="120" y="1360" class="signal" fill="#5f6875">illegal_instruction_o = !valid</text>
 
   <!-- Legend -->
-  <rect x="600" y="1450" width="1850" height="85" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" rx="10"/>
+  <rect x="600" y="1450" width="1850" height="105" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" rx="10"/>
   <text x="625" y="1480" class="box-title">Legend</text>
   <path d="M780 1474 H870" class="data"/><text x="885" y="1480" class="small">data / address bus</text>
   <path d="M1110 1474 H1200" class="control"/><text x="1215" y="1480" class="small">control signal</text>
   <path d="M1420 1474 H1510" class="state"/><text x="1525" y="1480" class="small">PC / architectural state</text>
   <path d="M1810 1474 H1900" class="imm"/><text x="1915" y="1480" class="small">immediate</text>
   <path d="M2080 1474 H2170" class="clock"/><text x="2185" y="1480" class="small">clk / reset</text>
-  <text x="625" y="1510" class="small">All wires are shown at their logical module boundary; long routed wires are intentionally not collapsed.</text>
+  <text x="625" y="1510" class="small">Port convention: *_i = input, *_o = output. decoder / alu / regfile are shared with the legacy and pipeline builds and keep their original port names.</text>
+  <text x="625" y="1530" class="small">All wires are shown at their logical module boundary; long routed wires are intentionally not collapsed.</text>
 </svg>
