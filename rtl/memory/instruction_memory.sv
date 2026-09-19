@@ -2,8 +2,8 @@ module instruction_memory #(
     parameter integer WORDS = 256,
     parameter string  IMAGE_FILE = "sim/images/instruction.hex"
 ) (
-    input  logic [63:0] address,
-    output logic [31:0] instruction
+    input  logic [63:0] address_i,
+    output logic [31:0] instruction_o
 );
 
     logic [31:0] storage [0:WORDS-1];
@@ -18,11 +18,11 @@ module instruction_memory #(
     end
 
     always_comb begin
-        index = int'(address >> 2);
+        index = int'(address_i >> 2);
         if (index < WORDS) begin
-            instruction = storage[index];
+            instruction_o = storage[index];
         end else begin
-            instruction = 32'd0;
+            instruction_o = 32'd0;
         end
     end
 

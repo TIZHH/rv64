@@ -1,15 +1,15 @@
 module pc_register (
-    input  logic        clk,
-    input  logic        reset,
-    input  logic [63:0] next_pc,
-    output logic [63:0] pc
+    input  logic        clk_i,
+    input  logic        reset_i,
+    input  logic [63:0] next_pc_i,
+    output logic [63:0] pc_o
 );
 
-    always_ff @(posedge clk) begin
-        if (reset) begin
-            pc <= 64'd0;
+    always_ff @(posedge clk_i) begin
+        if (reset_i) begin
+            pc_o <= 64'd0;
         end else begin
-            pc <= next_pc;
+            pc_o <= next_pc_i;
         end
     end
 

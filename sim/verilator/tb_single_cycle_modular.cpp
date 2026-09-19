@@ -36,29 +36,29 @@ bool run_test(const Test& test) {
         memory[address] = value;
     }
 
-    dut.reset = 1;
-    dut.instruction = 0;
-    dut.data_read_data = 0;
-    dut.clk = 0;
+    dut.reset_i = 1;
+    dut.instruction_i = 0;
+    dut.data_read_data_i = 0;
+    dut.clk_i = 0;
     dut.eval();
-    dut.clk = 1;
+    dut.clk_i = 1;
     dut.eval();
-    dut.reset = 0;
+    dut.reset_i = 0;
 
     for (int cycle = 0; cycle < 200; cycle++) {
-        const auto pc = dut.pc;
-        dut.instruction = (pc / 4 < test.program.size()) ? test.program[pc / 4] : 0;
-        dut.clk = 0;
-        dut.data_read_data = 0;
+        const auto pc = dut.pc_o;
+        dut.instruction_i = (pc / 4 < test.program.size()) ? test.program[pc / 4] : 0;
+        dut.clk_i = 0;
+        dut.data_read_data_i = 0;
         dut.eval();
-        dut.data_read_data = dut.data_read_enable ? read_word(memory, dut.data_address) : 0;
+        dut.data_read_data_i = dut.data_read_enable_o ? read_word(memory, dut.data_address_o) : 0;
         dut.eval();
 
-        const auto writes_memory = dut.data_write_enable;
-        const auto write_address = dut.data_address;
-        const auto write_data = dut.data_write_data;
-        const auto write_mask = dut.data_write_mask;
-        dut.clk = 1;
+        const auto writes_memory = dut.data_write_enable_o;
+        const auto write_address = dut.data_address_o;
+        const auto write_data = dut.data_write_data_o;
+        const auto write_mask = dut.data_write_mask_o;
+        dut.clk_i = 1;
         dut.eval();
 
         if (writes_memory) {
@@ -94,21 +94,21 @@ bool run_test(const Test& test) {
 
 bool run_illegal_test() {
     Vsingle_cycle_core dut;
-    dut.reset = 1;
-    dut.instruction = 0;
-    dut.data_read_data = 0;
-    dut.clk = 0;
+    dut.reset_i = 1;
+    dut.instruction_i = 0;
+    dut.data_read_data_i = 0;
+    dut.clk_i = 0;
     dut.eval();
-    dut.clk = 1;
+    dut.clk_i = 1;
     dut.eval();
-    dut.reset = 0;
-    dut.instruction = 0xffffffffU;
-    dut.clk = 0;
+    dut.reset_i = 0;
+    dut.instruction_i = 0xffffffffU;
+    dut.clk_i = 0;
     dut.eval();
-    const bool visible = dut.illegal_instruction;
-    dut.clk = 1;
+    const bool visible = dut.illegal_instruction_o;
+    dut.clk_i = 1;
     dut.eval();
-    const bool advances = dut.pc == 4;
+    const bool advances = dut.pc_o == 4;
     dut.final();
     return visible && advances;
 }

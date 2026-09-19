@@ -3,14 +3,14 @@ module data_memory #(
     parameter string  IMAGE_FILE = "sim/images/data.hex",
     parameter integer DEBUG_ADDRESS = 'h100
 ) (
-    input  logic        clk,
-    input  logic [63:0] address,
-    input  logic        read_enable,
-    output logic [63:0] read_data,
-    input  logic [63:0] write_data,
-    input  logic [7:0]  write_mask,
-    input  logic        write_enable,
-    output logic [63:0] debug_word
+    input  logic        clk_i,
+    input  logic [63:0] address_i,
+    input  logic        read_enable_i,
+    output logic [63:0] read_data_o,
+    input  logic [63:0] write_data_i,
+    input  logic [7:0]  write_mask_i,
+    input  logic        write_enable_i,
+    output logic [63:0] debug_word_o
 );
 
     logic [7:0] storage [0:BYTES-1];
@@ -29,32 +29,32 @@ module data_memory #(
     end
 
     always_comb begin
-        read_data = 64'd0;
-        read_base_address = int'(address >> 3) * 8;
-        write_base_address = int'(address >> 3) * 8;
-        if (read_enable && (read_base_address >= 0) && (read_base_address + 7 < BYTES)) begin
+        read_data_o = 64'd0;
+        read_base_address = int'(address_i >> 3) * 8;
+        write_base_address = int'(address_i >> 3) * 8;
+        if (read_enable_i && (read_base_address >= 0) && (read_base_address + 7 < BYTES)) begin
             for (read_lane = 0; read_lane < 8; read_lane = read_lane + 1) begin
-                read_data[read_lane * 8 +: 8] = storage[read_base_address + read_lane];
+                read_data_o[read_lane * 8 +: 8] = storage[read_base_address + read_lane];
             end
         end
     end
 
-    always_ff @(posedge clk) begin
-        if (write_enable && (address[63:32] == 32'd0) &&
-            (address[31:0] <= BYTES - 8)) begin
+    always_ff @(posedge clk_i) begin
+        if (write_enable_i && (address_i[63:32] == 32'd0) &&
+            (address_i[31:0] <= BYTES - 8)) begin
             for (write_lane = 0; write_lane < 8; write_lane = write_lane + 1) begin
-                if (write_mask[write_lane]) begin
-                    storage[write_base_address + write_lane] <= write_data[write_lane * 8 +: 8];
+                if (write_mask_i[write_lane]) begin
+                    storage[write_base_address + write_lane] <= write_data_i[write_lane * 8 +: 8];
                 end
             end
         end
     end
 
     always_comb begin
-        debug_word = 64'd0;
+        debug_word_o = 64'd0;
         if ((DEBUG_ADDRESS >= 0) && (DEBUG_ADDRESS + 7 < BYTES)) begin
             for (debug_lane = 0; debug_lane < 8; debug_lane = debug_lane + 1) begin
-                debug_word[debug_lane * 8 +: 8] = storage[DEBUG_ADDRESS + debug_lane];
+                debug_word_o[debug_lane * 8 +: 8] = storage[DEBUG_ADDRESS + debug_lane];
             end
         end
     end

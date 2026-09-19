@@ -1,10 +1,10 @@
 module writeback_mux (
-    input  logic [2:0]  source,
-    input  logic [63:0] alu_result,
-    input  logic [63:0] load_value,
-    input  logic [63:0] pc,
-    input  logic [63:0] immediate,
-    output logic [63:0] writeback_data
+    input  logic [2:0]  source_i,
+    input  logic [63:0] alu_result_i,
+    input  logic [63:0] load_value_i,
+    input  logic [63:0] pc_i,
+    input  logic [63:0] immediate_i,
+    output logic [63:0] writeback_data_o
 );
 
     localparam logic [2:0] WB_ALU   = 3'd0;
@@ -14,13 +14,13 @@ module writeback_mux (
     localparam logic [2:0] WB_AUIPC = 3'd4;
 
     always_comb begin
-        case (source)
-            WB_ALU:   writeback_data = alu_result;
-            WB_LOAD:  writeback_data = load_value;
-            WB_PC4:   writeback_data = pc + 64'd4;
-            WB_IMM:   writeback_data = immediate;
-            WB_AUIPC: writeback_data = pc + immediate;
-            default:  writeback_data = alu_result;
+        case (source_i)
+            WB_ALU:   writeback_data_o = alu_result_i;
+            WB_LOAD:  writeback_data_o = load_value_i;
+            WB_PC4:   writeback_data_o = pc_i + 64'd4;
+            WB_IMM:   writeback_data_o = immediate_i;
+            WB_AUIPC: writeback_data_o = pc_i + immediate_i;
+            default:  writeback_data_o = alu_result_i;
         endcase
     end
 
