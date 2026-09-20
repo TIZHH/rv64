@@ -10,18 +10,17 @@ module next_pc_logic (
 );
 
     always_comb begin
-        next_pc_o = pc_i + 64'd4;
-
-        if (branch_i && branch_taken_i) begin
-            next_pc_o = pc_i + immediate_i;
-        end
-
         if (jump_i) begin
             if (jump_register_i) begin
-                next_pc_o = (register_a_i + immediate_i) & ~64'd1;
+                next_pc_o =
+                    (register_a_i + immediate_i) & ~64'd1;
             end else begin
                 next_pc_o = pc_i + immediate_i;
             end
+        end else if (branch_i && branch_taken_i) begin
+            next_pc_o = pc_i + immediate_i;
+        end else begin
+            next_pc_o = pc_i + 64'd4;
         end
     end
 
