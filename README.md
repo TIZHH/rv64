@@ -22,25 +22,26 @@ load-use stalls, and control-flow flushing.
 make help
 make lint
 make test
-make modular-lint
-make modular-test
-make file-memory-test
-make pipeline-lint
-make pipeline-test
+make branch-unit-test
+make pc-register-test
+make next-pc-logic-test
+make single-cycle-core-test
+make single-cycle-file-system-test
+make pipeline-cpu-test
 ```
 
-`make test` builds the Verilator model and runs the single-cycle RV64I
-regression, including focused arithmetic, control-flow, memory, word-operation,
-and illegal-instruction checks. `make pipeline-test` runs the same architectural
-programs through the five-stage implementation.
+`make test` builds and runs all retained Verilator tests. Each test also has a
+matching `*-model` target that generates its Verilator model without compiling
+the C++ testbench. `make single-cycle-core-test` and `make pipeline-cpu-test`
+run the same architectural RV64I programs through the modular single-cycle and
+five-stage implementations.
 
 The original `single_cycle_cpu` remains the reference implementation. The
 new `single_cycle_core` keeps the same behavior but splits PC state, next-PC
 selection, branch comparison, memory formatting, and writeback into separate
-modules. `make modular-test` runs the same regression against this refactored
-core. `make file-memory-test` runs the file-backed system wrapper, which loads
-instructions from `sim/images/instruction.hex` and data bytes from
-`sim/images/data.hex`.
+modules. `make single-cycle-file-system-test` runs the file-backed system
+wrapper, which loads instructions from `sim/images/instruction.hex` and data
+bytes from `sim/images/data.hex`.
 
 ## Scope
 

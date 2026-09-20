@@ -30,6 +30,21 @@ instruction and data memories. The default instruction memory contains 256
 initialized with `$readmemh`; the data image is byte-oriented and supports
 `@address` markers.
 
+The file-backed system uses separate instruction and data address spaces rather
+than one unified physical map:
+
+| Space | Default range | Addressing | Source |
+| --- | --- | --- | --- |
+| Instruction | `0x0000` - `0x03fc` | 32-bit words at 4-byte PC increments | `sim/images/instruction.hex` |
+| Data | `0x0000` - `0x0fff` | Bytes, with load/store masks | `sim/images/data.hex` |
+
+Reset sets the PC to `0x0000`. Instruction address `PC` selects word
+`PC >> 2`, so the first three image entries execute at `0x0000`, `0x0004`, and
+`0x0008`. The default data image places byte `0x05` at address `0x0080`; the
+file-backed smoke program writes its result at `0x0100`, which is also the
+default debug observation address. Identical numeric addresses in the two
+spaces do not conflict because instruction and data storage are separate.
+
 On a rising clock edge:
 
 - reset sets the PC to zero;
