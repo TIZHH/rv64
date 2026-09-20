@@ -20,20 +20,20 @@ PIPELINE_SIM := $(PIPELINE_OBJ_DIR)/Vpipeline_cpu
 	pipeline-build pipeline-lint pipeline-test clean
 
 help:
-	@echo "Targets:"
-	@echo "  make build             Build the legacy single-cycle Verilator model"
-	@echo "  make lint              Lint the legacy single-cycle RTL"
-	@echo "  make test              Run the legacy full RV64I regression"
-	@echo "  make branch-unit-test  Test branch_unit in isolation"
-	@echo "  make modular-lint      Lint the modular core and file-backed memories"
-	@echo "  make modular-test      Run the full RV64I regression on modular_core"
-	@echo "  make file-memory-test  Boot from instruction.hex/data.hex images"
-	@echo "  make pipeline-lint     Lint the five-stage pipeline RTL"
-	@echo "  make pipeline-test     Run the full RV64I regression on the pipeline"
-	@echo "  make clean             Remove generated Verilator build output"
+	@echo "可用目标:"
+	@echo "  make build             构建旧版单周期 Verilator 模型"
+	@echo "  make lint              检查旧版单周期 RTL"
+	@echo "  make test              运行旧版完整 RV64I 回归测试"
+	@echo "  make branch-unit-test  单独测试 branch_unit 模块"
+	@echo "  make modular-lint      检查模块化核心和文件内存"
+	@echo "  make modular-test      在模块化核心上运行完整 RV64I 回归测试"
+	@echo "  make file-memory-test  从 instruction.hex/data.hex 启动测试"
+	@echo "  make pipeline-lint     检查五级流水线 RTL"
+	@echo "  make pipeline-test     在五级流水线上运行完整 RV64I 回归测试"
+	@echo "  make clean             删除生成的 Verilator 构建文件"
 
-# Legacy single-cycle CPU: external C++ testbench supplies instruction words
-# and models byte-addressed data memory. This is the original reference top.
+# 旧版单周期 CPU：由外部 C++ 测试台提供指令并模拟按字节寻址的数据内存。
+# 这是项目保留的原始参考顶层。
 build: $(SIM)
 
 $(SIM): $(RTL) $(TESTBENCH)
@@ -41,21 +41,20 @@ $(SIM): $(RTL) $(TESTBENCH)
 	$(VERILATOR) --cc --exe --build --top-module $(TOP) \
 		--Mdir $(OBJ_DIR) $(RTL) $(TESTBENCH)
 
-# Legacy single-cycle lint only; no C++ testbench is compiled here.
+# 只检查旧版单周期 RTL；不会在这里编译 C++ 测试台。
 lint:
 	$(VERILATOR) --lint-only --Wall $(RTL)
 
-# Full legacy single-cycle architecture regression. The cases are defined in
-# sim/verilator/rv64i_tests.cpp and cover ALU, control flow, memory, W ops,
-# and illegal-instruction visibility.
+# 旧版单周期 CPU 的完整架构回归测试。测试用例定义在
+# sim/verilator/rv64i_tests.cpp，覆盖 ALU、控制流、访存、W 指令和非法指令可见性。
 test: build
 	$(SIM)
 
 BRANCH_UNIT_OBJ_DIR := $(BUILD_DIR)/branch_unit_obj_dir
 BRANCH_UNIT_SIM := $(BRANCH_UNIT_OBJ_DIR)/Vbranch_unit
 
-# Isolated combinational unit test: 13 truth-table cases for BEQ/BNE/BLT/BGE/
-# BLTU/BGEU, including signed-vs-unsigned comparisons and unsupported types.
+# 独立组合逻辑单元测试：包含 BEQ/BNE/BLT/BGE/BLTU/BGEU 的 13 个真值表用例，
+# 同时检查有符号/无符号比较以及不支持的分支类型。
 branch-unit-test: $(BRANCH_UNIT_SIM)
 	$(BRANCH_UNIT_SIM)
 
@@ -78,8 +77,7 @@ MODULAR_SYSTEM_RTL := $(MODULAR_CORE_RTL) rtl/memory/instruction_memory.sv \
 MODULAR_SYSTEM_TESTBENCH := sim/verilator/tb_single_cycle_files.cpp
 MODULAR_SYSTEM_SIM := $(MODULAR_OBJ_DIR)/Vsingle_cycle_file_system
 
-# Modular single-cycle core build. This excludes the file-backed memory wrapper
-# so that the core can be tested with the same external-memory regression.
+# 构建模块化单周期核心。这里不包含文件内存封装，方便使用同一套外部内存回归测试。
 modular-build: $(MODULAR_CORE_SIM)
 
 $(MODULAR_CORE_SIM): $(MODULAR_CORE_RTL) $(MODULAR_CORE_TESTBENCH)
@@ -87,17 +85,17 @@ $(MODULAR_CORE_SIM): $(MODULAR_CORE_RTL) $(MODULAR_CORE_TESTBENCH)
 	$(VERILATOR) --cc --exe --build --top-module single_cycle_core \
 		--Mdir $(MODULAR_OBJ_DIR) $(MODULAR_CORE_RTL) $(MODULAR_CORE_TESTBENCH)
 
-# Lint the modular core, its split datapath/control modules, and both memories.
+# 检查模块化核心、拆分后的数据通路/控制模块以及两个内存模块。
 modular-lint:
 	$(VERILATOR) --lint-only --Wall $(MODULAR_SYSTEM_RTL)
 
-# Full legacy RV64I test table run against single_cycle_core after the port and
-# datapath modularization. This checks architectural behavior, not just wiring.
+# 在 single_cycle_core 上运行完整 RV64I 测试表，验证端口和数据通路模块化之后的
+# 架构行为，而不只是检查模块是否能够连接。
 modular-test: modular-build
 	$(MODULAR_CORE_SIM)
 
-# File-backed integration smoke test. The CPU fetches from instruction.hex,
-# loads a value from data.hex, performs ADDI, and stores the result at 0x100.
+# 文件内存集成 smoke test。CPU 从 instruction.hex 取指，从 data.hex 加载数据，
+# 执行 ADDI，并把结果写回地址 0x100。
 file-memory-test: $(MODULAR_SYSTEM_SIM)
 	$(MODULAR_SYSTEM_SIM)
 
@@ -107,8 +105,8 @@ $(MODULAR_SYSTEM_SIM): $(MODULAR_SYSTEM_RTL) $(MODULAR_SYSTEM_TESTBENCH) \
 	$(VERILATOR) --cc --exe --build --top-module single_cycle_file_system \
 		--Mdir $(MODULAR_OBJ_DIR) $(MODULAR_SYSTEM_RTL) $(MODULAR_SYSTEM_TESTBENCH)
 
-# Five-stage pipeline build and regression use the same architectural test table
-# as the two single-cycle implementations for direct behavior comparison.
+# 五级流水线构建和回归测试使用与两个单周期实现相同的架构测试表，
+# 方便直接比较三种实现的行为。
 pipeline-build: $(PIPELINE_SIM)
 
 $(PIPELINE_SIM): $(PIPELINE_RTL) $(PIPELINE_TESTBENCH)
@@ -116,14 +114,14 @@ $(PIPELINE_SIM): $(PIPELINE_RTL) $(PIPELINE_TESTBENCH)
 	$(VERILATOR) --cc --exe --build --top-module pipeline_cpu \
 		--Mdir $(PIPELINE_OBJ_DIR) $(PIPELINE_RTL) $(PIPELINE_TESTBENCH)
 
-# Lint the IF/ID/EX/MEM/WB pipeline and hazard/forwarding modules.
+# 检查 IF/ID/EX/MEM/WB 流水线以及冒险处理和前递模块。
 pipeline-lint:
 	$(VERILATOR) --lint-only --Wall $(PIPELINE_RTL)
 
-# Full RV64I architectural regression on the pipelined implementation.
+# 在五级流水线实现上运行完整 RV64I 架构回归测试。
 pipeline-test: pipeline-build
 	$(PIPELINE_SIM)
 
-# Remove all generated Verilator models and object files.
+# 删除所有生成的 Verilator 模型和目标文件。
 clean:
 	rm -rf $(BUILD_DIR)
