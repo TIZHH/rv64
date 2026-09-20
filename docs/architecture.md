@@ -18,11 +18,11 @@ The modular single-cycle path separates the following responsibilities:
 - `writeback_mux.sv`: ALU, load, link, LUI, and AUIPC writeback selection;
 - `single_cycle_core.sv`: datapath wiring and instruction-level control.
 
-Every port in `rtl/single_cycle_modular/` and `rtl/memory/` carries a
-directional suffix (`*_i` for input, `*_o` for output) so an instantiation is
-readable without opening the module. The shared `rtl/common/` modules keep
-their original port names because the legacy single-cycle top and the pipeline
-also instantiate them.
+Every port in `rtl/single_cycle_modular/`, `rtl/memory/`, and `rtl/pipeline/`
+carries a directional suffix (`*_i` for input, `*_o` for output) so an
+instantiation is readable without opening the module. The shared
+`rtl/common/` modules keep their original port names because the legacy
+single-cycle top and the pipeline also instantiate them.
 
 `single_cycle_file_system.sv` connects that core to separate file-backed
 instruction and data memories. The default instruction memory contains 256
