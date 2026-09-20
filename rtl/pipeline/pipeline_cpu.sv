@@ -1,17 +1,17 @@
 module pipeline_cpu (
-    input  logic        clk,
-    input  logic        reset,
-    input  logic [31:0] instruction,
-    input  logic [63:0] data_read_data,
-    output logic [63:0] pc,
-    output logic [63:0] data_address,
-    output logic        data_read_enable,
-    output logic [63:0] data_write_data,
-    output logic [7:0]  data_write_mask,
-    output logic        data_write_enable,
-    output logic        illegal_instruction,
-    output logic [63:0] debug_x10,
-    output logic [63:0] debug_x31
+    input  logic        clk_i,
+    input  logic        reset_i,
+    input  logic [31:0] instruction_i,
+    input  logic [63:0] data_read_data_i,
+    output logic [63:0] pc_o,
+    output logic [63:0] data_address_o,
+    output logic        data_read_enable_o,
+    output logic [63:0] data_write_data_o,
+    output logic [7:0]  data_write_mask_o,
+    output logic        data_write_enable_o,
+    output logic        illegal_instruction_o,
+    output logic [63:0] debug_x10_o,
+    output logic [63:0] debug_x31_o
 );
 
     logic if_id_valid;
@@ -102,8 +102,8 @@ module pipeline_cpu (
     );
 
     regfile register_file (
-        .clk(clk),
-        .reset(reset),
+        .clk(clk_i),
+        .reset(reset_i),
         .write_enable(mem_wb_valid && mem_wb_reg_write),
         .write_address(mem_wb_rd),
         .write_data(writeback_data),
@@ -111,20 +111,20 @@ module pipeline_cpu (
         .read_address_b(if_id_instruction[24:20]),
         .read_data_a(register_read_a),
         .read_data_b(register_read_b),
-        .debug_x10(debug_x10),
-        .debug_x31(debug_x31)
+        .debug_x10(debug_x10_o),
+        .debug_x31(debug_x31_o)
     );
 
     pipeline_writeback writeback_stage (
-        .source(mem_wb_writeback_source),
-        .alu_result(mem_wb_alu_result),
-        .load_data(mem_wb_load_data),
-        .immediate(mem_wb_immediate),
-        .pc4(mem_wb_pc4),
-        .memory_size(mem_wb_memory_size),
-        .memory_unsigned(mem_wb_memory_unsigned),
-        .address_offset(mem_wb_address),
-        .data(writeback_data)
+        .source_i(mem_wb_writeback_source),
+        .alu_result_i(mem_wb_alu_result),
+        .load_data_i(mem_wb_load_data),
+        .immediate_i(mem_wb_immediate),
+        .pc4_i(mem_wb_pc4),
+        .memory_size_i(mem_wb_memory_size),
+        .memory_unsigned_i(mem_wb_memory_unsigned),
+        .address_offset_i(mem_wb_address),
+        .data_o(writeback_data)
     );
 
     always_comb begin
@@ -139,65 +139,65 @@ module pipeline_cpu (
     end
 
     pipeline_hazard hazard_unit (
-        .if_valid(if_id_valid),
-        .if_opcode(if_id_instruction[6:0]),
-        .if_rs1(if_id_instruction[19:15]),
-        .if_rs2(if_id_instruction[24:20]),
-        .id_ex_valid(id_ex_valid),
-        .id_ex_mem_read(id_ex_mem_read),
-        .id_ex_rd(id_ex_rd),
-        .stall(stall)
+        .if_valid_i(if_id_valid),
+        .if_opcode_i(if_id_instruction[6:0]),
+        .if_rs1_i(if_id_instruction[19:15]),
+        .if_rs2_i(if_id_instruction[24:20]),
+        .id_ex_valid_i(id_ex_valid),
+        .id_ex_mem_read_i(id_ex_mem_read),
+        .id_ex_rd_i(id_ex_rd),
+        .stall_o(stall)
     );
 
     pipeline_execute execute_stage (
-        .id_valid(id_ex_valid),
-        .id_pc(id_ex_pc),
-        .id_register_a(id_ex_register_a),
-        .id_register_b(id_ex_register_b),
-        .id_immediate(id_ex_immediate),
-        .id_rs1(id_ex_rs1),
-        .id_rs2(id_ex_rs2),
-        .id_alu_operation(id_ex_alu_operation),
-        .id_writeback_source(id_ex_writeback_source),
-        .id_branch_type(id_ex_branch_type),
-        .id_alu_src_imm(id_ex_alu_src_imm),
-        .id_branch(id_ex_branch),
-        .id_jump(id_ex_jump),
-        .id_jump_register(id_ex_jump_register),
-        .ex_valid(ex_mem_valid),
-        .ex_reg_write(ex_mem_reg_write),
-        .ex_mem_read(ex_mem_mem_read),
-        .ex_rd(ex_mem_rd),
-        .ex_result(ex_mem_alu_result),
-        .wb_valid(mem_wb_valid),
-        .wb_reg_write(mem_wb_reg_write),
-        .wb_rd(mem_wb_rd),
-        .wb_data(writeback_data),
-        .result_b(ex_register_b),
-        .alu_result(ex_alu_result),
-        .control_taken(ex_control_taken),
-        .target_pc(ex_target_pc)
+        .id_valid_i(id_ex_valid),
+        .id_pc_i(id_ex_pc),
+        .id_register_a_i(id_ex_register_a),
+        .id_register_b_i(id_ex_register_b),
+        .id_immediate_i(id_ex_immediate),
+        .id_rs1_i(id_ex_rs1),
+        .id_rs2_i(id_ex_rs2),
+        .id_alu_operation_i(id_ex_alu_operation),
+        .id_writeback_source_i(id_ex_writeback_source),
+        .id_branch_type_i(id_ex_branch_type),
+        .id_alu_src_imm_i(id_ex_alu_src_imm),
+        .id_branch_i(id_ex_branch),
+        .id_jump_i(id_ex_jump),
+        .id_jump_register_i(id_ex_jump_register),
+        .ex_valid_i(ex_mem_valid),
+        .ex_reg_write_i(ex_mem_reg_write),
+        .ex_mem_read_i(ex_mem_mem_read),
+        .ex_rd_i(ex_mem_rd),
+        .ex_result_i(ex_mem_alu_result),
+        .wb_valid_i(mem_wb_valid),
+        .wb_reg_write_i(mem_wb_reg_write),
+        .wb_rd_i(mem_wb_rd),
+        .wb_data_i(writeback_data),
+        .result_b_o(ex_register_b),
+        .alu_result_o(ex_alu_result),
+        .control_taken_o(ex_control_taken),
+        .target_pc_o(ex_target_pc)
     );
 
     pipeline_memory_port memory_port (
-        .valid(ex_mem_valid),
-        .read_enable(ex_mem_mem_read),
-        .write_enable(ex_mem_mem_write),
-        .address(ex_mem_alu_result),
-        .store_data(ex_mem_store_data),
-        .memory_size(ex_mem_memory_size),
-        .data_address(data_address),
-        .data_read_enable(data_read_enable),
-        .data_write_data(data_write_data),
-        .data_write_mask(data_write_mask),
-        .data_write_enable(data_write_enable)
+        .valid_i(ex_mem_valid),
+        .read_enable_i(ex_mem_mem_read),
+        .write_enable_i(ex_mem_mem_write),
+        .address_i(ex_mem_alu_result),
+        .store_data_i(ex_mem_store_data),
+        .memory_size_i(ex_mem_memory_size),
+        .data_address_o(data_address_o),
+        .data_read_enable_o(data_read_enable_o),
+        .data_write_data_o(data_write_data_o),
+        .data_write_mask_o(data_write_mask_o),
+        .data_write_enable_o(data_write_enable_o)
     );
 
-    assign illegal_instruction = if_id_valid && !id_valid;
+    assign illegal_instruction_o = if_id_valid && !id_valid;
 
-    always_ff @(posedge clk) begin
-        if (reset) begin
-            pc <= 64'd0;
+    always_ff @(posedge clk_i) begin
+        if (reset_i) begin
+            pc_o <= 64'd0;
             if_id_valid <= 1'b0;
             id_ex_valid <= 1'b0;
             ex_mem_valid <= 1'b0;
@@ -205,7 +205,7 @@ module pipeline_cpu (
         end else begin
             mem_wb_valid <= ex_mem_valid;
             mem_wb_alu_result <= ex_mem_alu_result;
-            mem_wb_load_data <= data_read_data;
+            mem_wb_load_data <= data_read_data_i;
             mem_wb_immediate <= ex_mem_immediate;
             mem_wb_pc4 <= ex_mem_pc4;
             mem_wb_address <= ex_mem_alu_result[2:0];
@@ -229,18 +229,18 @@ module pipeline_cpu (
             ex_mem_mem_write <= id_ex_mem_write;
 
             if (ex_control_taken) begin
-                pc <= ex_target_pc;
+                pc_o <= ex_target_pc;
                 if_id_valid <= 1'b0;
                 id_ex_valid <= 1'b0;
             end else if (stall) begin
-                pc <= pc;
+                pc_o <= pc_o;
                 if_id_valid <= if_id_valid;
                 id_ex_valid <= 1'b0;
             end else begin
-                pc <= pc + 64'd4;
+                pc_o <= pc_o + 64'd4;
                 if_id_valid <= 1'b1;
-                if_id_pc <= pc;
-                if_id_instruction <= instruction;
+                if_id_pc <= pc_o;
+                if_id_instruction <= instruction_i;
 
                 id_ex_valid <= if_id_valid && id_valid;
                 id_ex_pc <= if_id_pc;
