@@ -15,7 +15,7 @@ PIPELINE_RTL := rtl/common/alu.sv rtl/common/decoder.sv rtl/common/regfile.sv \
 PIPELINE_TESTBENCH := sim/verilator/tb_pipeline.cpp sim/verilator/rv64i_tests.cpp
 PIPELINE_SIM := $(PIPELINE_OBJ_DIR)/Vpipeline_cpu
 
-.PHONY: help build lint test modular-build modular-lint modular-test file-memory-test \
+.PHONY: help build lint test branch-unit-test modular-build modular-lint modular-test file-memory-test \
 	pipeline-build pipeline-lint pipeline-test clean
 
 help:
@@ -23,6 +23,7 @@ help:
 	@echo "  make build  Build the Verilator simulator"
 	@echo "  make lint   Lint the current RTL"
 	@echo "  make test   Build and run the RV64I single-cycle regression"
+	@echo "  make branch-unit-test  Run the isolated branch comparator test"
 	@echo "  make modular-lint  Lint the modular single-cycle RTL"
 	@echo "  make modular-test  Run the modular single-cycle regression"
 	@echo "  make file-memory-test  Run the file-backed memory smoke test"
@@ -42,6 +43,18 @@ lint:
 
 test: build
 	$(SIM)
+
+BRANCH_UNIT_OBJ_DIR := $(BUILD_DIR)/branch_unit_obj_dir
+BRANCH_UNIT_SIM := $(BRANCH_UNIT_OBJ_DIR)/Vbranch_unit
+
+branch-unit-test: $(BRANCH_UNIT_SIM)
+	$(BRANCH_UNIT_SIM)
+
+$(BRANCH_UNIT_SIM): rtl/single_cycle_modular/branch_unit.sv \
+	sim/verilator/tb_branch_unit.cpp
+	mkdir -p $(BRANCH_UNIT_OBJ_DIR)
+	$(VERILATOR) --cc --exe --build --top-module branch_unit \
+		--Mdir $(BRANCH_UNIT_OBJ_DIR) $^
 
 MODULAR_OBJ_DIR := $(BUILD_DIR)/modular_obj_dir
 MODULAR_CORE_RTL := rtl/common/alu.sv rtl/common/decoder.sv rtl/common/regfile.sv \
