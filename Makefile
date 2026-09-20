@@ -105,8 +105,7 @@ SINGLE_CYCLE_CORE_RTL := rtl/common/alu.sv rtl/common/decoder.sv rtl/common/regf
 	rtl/single_cycle_modular/branch_unit.sv rtl/single_cycle_modular/memory_access.sv \
 	rtl/single_cycle_modular/next_pc_logic.sv rtl/single_cycle_modular/pc_register.sv \
 	rtl/single_cycle_modular/writeback_mux.sv rtl/single_cycle_modular/single_cycle_core.sv
-SINGLE_CYCLE_CORE_TESTBENCH := sim/verilator/tb_single_cycle_modular.cpp \
-	sim/verilator/rv64i_tests.cpp
+SINGLE_CYCLE_CORE_TESTBENCH := sim/verilator/tb_single_cycle_modular.cpp
 SINGLE_CYCLE_CORE_OBJ_DIR := $(BUILD_DIR)/single_cycle_core_obj_dir
 SINGLE_CYCLE_CORE_SIM := $(SINGLE_CYCLE_CORE_OBJ_DIR)/Vsingle_cycle_core
 
