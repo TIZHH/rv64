@@ -1,127 +1,195 @@
 VERILATOR ?= verilator
 BUILD_DIR := build
 
-OBJ_DIR := $(BUILD_DIR)/obj_dir
-TOP := single_cycle_cpu
-RTL := rtl/common/alu.sv rtl/common/decoder.sv rtl/common/regfile.sv \
-	rtl/single_cycle/single_cycle_cpu.sv
-TESTBENCH := sim/verilator/tb_single_cycle.cpp sim/verilator/rv64i_tests.cpp
-SIM := $(OBJ_DIR)/V$(TOP)
-
-PIPELINE_OBJ_DIR := $(BUILD_DIR)/pipeline_obj_dir
-PIPELINE_RTL := rtl/common/alu.sv rtl/common/decoder.sv rtl/common/regfile.sv \
-	rtl/pipeline/pipeline_execute.sv rtl/pipeline/pipeline_writeback.sv \
-	rtl/pipeline/pipeline_memory_port.sv rtl/pipeline/pipeline_hazard.sv \
-	rtl/pipeline/pipeline_cpu.sv
-PIPELINE_TESTBENCH := sim/verilator/tb_pipeline.cpp sim/verilator/rv64i_tests.cpp
-PIPELINE_SIM := $(PIPELINE_OBJ_DIR)/Vpipeline_cpu
-
-.PHONY: help build lint test branch-unit-test modular-build modular-lint modular-test file-memory-test \
-	pipeline-build pipeline-lint pipeline-test clean
+.PHONY: help lint test clean \
+	branch-unit-model branch-unit-test \
+	pc-register-model pc-register-test \
+	next-pc-logic-model next-pc-logic-test \
+	single-cycle-core-model single-cycle-core-test \
+	single-cycle-file-system-model single-cycle-file-system-test \
+	pipeline-cpu-model pipeline-cpu-test
 
 help:
 	@echo "可用目标:"
-	@echo "  make build             构建旧版单周期 Verilator 模型"
-	@echo "  make lint              检查旧版单周期 RTL"
-	@echo "  make test              运行旧版完整 RV64I 回归测试"
-	@echo "  make branch-unit-test  单独测试 branch_unit 模块"
-	@echo "  make modular-lint      检查模块化核心和文件内存"
-	@echo "  make modular-test      在模块化核心上运行完整 RV64I 回归测试"
-	@echo "  make file-memory-test  从 instruction.hex/data.hex 启动测试"
-	@echo "  make pipeline-lint     检查五级流水线 RTL"
-	@echo "  make pipeline-test     在五级流水线上运行完整 RV64I 回归测试"
-	@echo "  make clean             删除生成的 Verilator 构建文件"
+	@echo "  make lint                           检查模块化单周期、文件内存和流水线 RTL"
+	@echo "  make test                           运行下面列出的全部 Verilator 测试"
+	@echo "  make branch-unit-model              生成 branch_unit Verilator 模型"
+	@echo "  make branch-unit-test               测试六种 RV64I 分支比较"
+	@echo "  make pc-register-model              生成 pc_register Verilator 模型"
+	@echo "  make pc-register-test               测试 PC 复位和时钟更新"
+	@echo "  make next-pc-logic-model             生成 next_pc_logic Verilator 模型"
+	@echo "  make next-pc-logic-test              测试顺序、分支、JAL 和 JALR 下一 PC"
+	@echo "  make single-cycle-core-model         生成模块化单周期核心模型"
+	@echo "  make single-cycle-core-test          运行模块化单周期 RV64I 回归测试"
+	@echo "  make single-cycle-file-system-model  生成文件内存系统模型"
+	@echo "  make single-cycle-file-system-test   运行指令/数据镜像启动测试"
+	@echo "  make pipeline-cpu-model              生成五级流水线 CPU 模型"
+	@echo "  make pipeline-cpu-test               运行五级流水线 RV64I 回归测试"
+	@echo "  make clean                           删除生成的 Verilator 构建文件"
 
-# 旧版单周期 CPU：由外部 C++ 测试台提供指令并模拟按字节寻址的数据内存。
-# 这是项目保留的原始参考顶层。
-build: $(SIM)
-
-$(SIM): $(RTL) $(TESTBENCH)
-	mkdir -p $(OBJ_DIR)
-	$(VERILATOR) --cc --exe --build --top-module $(TOP) \
-		--Mdir $(OBJ_DIR) $(RTL) $(TESTBENCH)
-
-# 只检查旧版单周期 RTL；不会在这里编译 C++ 测试台。
-lint:
-	$(VERILATOR) --lint-only --Wall $(RTL)
-
-# 旧版单周期 CPU 的完整架构回归测试。测试用例定义在
-# sim/verilator/rv64i_tests.cpp，覆盖 ALU、控制流、访存、W 指令和非法指令可见性。
-test: build
-	$(SIM)
-
+# ------------------------------
+# branch_unit：组合逻辑分支比较模块。
+BRANCH_UNIT_RTL := rtl/single_cycle_modular/branch_unit.sv
+BRANCH_UNIT_TESTBENCH := sim/verilator/tb_branch_unit.cpp
 BRANCH_UNIT_OBJ_DIR := $(BUILD_DIR)/branch_unit_obj_dir
 BRANCH_UNIT_SIM := $(BRANCH_UNIT_OBJ_DIR)/Vbranch_unit
 
-# 独立组合逻辑单元测试：包含 BEQ/BNE/BLT/BGE/BLTU/BGEU 的 13 个真值表用例，
-# 同时检查有符号/无符号比较以及不支持的分支类型。
+branch-unit-model: $(BRANCH_UNIT_RTL)
+	mkdir -p $(BRANCH_UNIT_OBJ_DIR)
+	$(VERILATOR) --cc \
+		--top-module branch_unit \
+		--Mdir $(BRANCH_UNIT_OBJ_DIR) \
+		$^
+
 branch-unit-test: $(BRANCH_UNIT_SIM)
 	$(BRANCH_UNIT_SIM)
 
-$(BRANCH_UNIT_SIM): rtl/single_cycle_modular/branch_unit.sv \
-	sim/verilator/tb_branch_unit.cpp
+$(BRANCH_UNIT_SIM): $(BRANCH_UNIT_RTL) $(BRANCH_UNIT_TESTBENCH)
 	mkdir -p $(BRANCH_UNIT_OBJ_DIR)
-	$(VERILATOR) --cc --exe --build --top-module branch_unit \
-		--Mdir $(BRANCH_UNIT_OBJ_DIR) $^
+	$(VERILATOR) --cc --exe --build \
+		--top-module branch_unit \
+		--Mdir $(BRANCH_UNIT_OBJ_DIR) \
+		$^
 
-MODULAR_OBJ_DIR := $(BUILD_DIR)/modular_obj_dir
-MODULAR_CORE_RTL := rtl/common/alu.sv rtl/common/decoder.sv rtl/common/regfile.sv \
+# ------------------------------
+# pc_register：带同步复位的 PC 时序寄存器。
+PC_REGISTER_RTL := rtl/single_cycle_modular/pc_register.sv
+PC_REGISTER_TESTBENCH := sim/verilator/tb_pc_register.cpp
+PC_REGISTER_OBJ_DIR := $(BUILD_DIR)/pc_register_obj_dir
+PC_REGISTER_SIM := $(PC_REGISTER_OBJ_DIR)/Vpc_register
+
+pc-register-model: $(PC_REGISTER_RTL)
+	mkdir -p $(PC_REGISTER_OBJ_DIR)
+	$(VERILATOR) --cc \
+		--top-module pc_register \
+		--Mdir $(PC_REGISTER_OBJ_DIR) \
+		$^
+
+pc-register-test: $(PC_REGISTER_SIM)
+	$(PC_REGISTER_SIM)
+
+$(PC_REGISTER_SIM): $(PC_REGISTER_RTL) $(PC_REGISTER_TESTBENCH)
+	mkdir -p $(PC_REGISTER_OBJ_DIR)
+	$(VERILATOR) --cc --exe --build \
+		--top-module pc_register \
+		--Mdir $(PC_REGISTER_OBJ_DIR) \
+		$^
+
+# ------------------------------
+# next_pc_logic：顺序、分支、JAL 和 JALR 下一 PC 选择。
+NEXT_PC_LOGIC_RTL := rtl/single_cycle_modular/next_pc_logic.sv
+NEXT_PC_LOGIC_TESTBENCH := sim/verilator/tb_next_pc_logic.cpp
+NEXT_PC_LOGIC_OBJ_DIR := $(BUILD_DIR)/next_pc_logic_obj_dir
+NEXT_PC_LOGIC_SIM := $(NEXT_PC_LOGIC_OBJ_DIR)/Vnext_pc_logic
+
+next-pc-logic-model: $(NEXT_PC_LOGIC_RTL)
+	mkdir -p $(NEXT_PC_LOGIC_OBJ_DIR)
+	$(VERILATOR) --cc \
+		--top-module next_pc_logic \
+		--Mdir $(NEXT_PC_LOGIC_OBJ_DIR) \
+		$^
+
+next-pc-logic-test: $(NEXT_PC_LOGIC_SIM)
+	$(NEXT_PC_LOGIC_SIM)
+
+$(NEXT_PC_LOGIC_SIM): $(NEXT_PC_LOGIC_RTL) $(NEXT_PC_LOGIC_TESTBENCH)
+	mkdir -p $(NEXT_PC_LOGIC_OBJ_DIR)
+	$(VERILATOR) --cc --exe --build \
+		--top-module next_pc_logic \
+		--Mdir $(NEXT_PC_LOGIC_OBJ_DIR) \
+		$^
+
+# ------------------------------
+# single_cycle_core：模块化单周期 RV64I 核心，内存由 C++ 测试台模拟。
+SINGLE_CYCLE_CORE_RTL := rtl/common/alu.sv rtl/common/decoder.sv rtl/common/regfile.sv \
 	rtl/single_cycle_modular/branch_unit.sv rtl/single_cycle_modular/memory_access.sv \
 	rtl/single_cycle_modular/next_pc_logic.sv rtl/single_cycle_modular/pc_register.sv \
 	rtl/single_cycle_modular/writeback_mux.sv rtl/single_cycle_modular/single_cycle_core.sv
-MODULAR_CORE_TESTBENCH := sim/verilator/tb_single_cycle_modular.cpp sim/verilator/rv64i_tests.cpp
-MODULAR_CORE_SIM := $(MODULAR_OBJ_DIR)/Vsingle_cycle_core
+SINGLE_CYCLE_CORE_TESTBENCH := sim/verilator/tb_single_cycle_modular.cpp \
+	sim/verilator/rv64i_tests.cpp
+SINGLE_CYCLE_CORE_OBJ_DIR := $(BUILD_DIR)/single_cycle_core_obj_dir
+SINGLE_CYCLE_CORE_SIM := $(SINGLE_CYCLE_CORE_OBJ_DIR)/Vsingle_cycle_core
 
-MODULAR_SYSTEM_RTL := $(MODULAR_CORE_RTL) rtl/memory/instruction_memory.sv \
-	rtl/memory/data_memory.sv rtl/single_cycle_modular/single_cycle_file_system.sv
-MODULAR_SYSTEM_TESTBENCH := sim/verilator/tb_single_cycle_files.cpp
-MODULAR_SYSTEM_SIM := $(MODULAR_OBJ_DIR)/Vsingle_cycle_file_system
+single-cycle-core-model: $(SINGLE_CYCLE_CORE_RTL)
+	mkdir -p $(SINGLE_CYCLE_CORE_OBJ_DIR)
+	$(VERILATOR) --cc \
+		--top-module single_cycle_core \
+		--Mdir $(SINGLE_CYCLE_CORE_OBJ_DIR) \
+		$^
 
-# 构建模块化单周期核心。这里不包含文件内存封装，方便使用同一套外部内存回归测试。
-modular-build: $(MODULAR_CORE_SIM)
+single-cycle-core-test: $(SINGLE_CYCLE_CORE_SIM)
+	$(SINGLE_CYCLE_CORE_SIM)
 
-$(MODULAR_CORE_SIM): $(MODULAR_CORE_RTL) $(MODULAR_CORE_TESTBENCH)
-	mkdir -p $(MODULAR_OBJ_DIR)
-	$(VERILATOR) --cc --exe --build --top-module single_cycle_core \
-		--Mdir $(MODULAR_OBJ_DIR) $(MODULAR_CORE_RTL) $(MODULAR_CORE_TESTBENCH)
+$(SINGLE_CYCLE_CORE_SIM): $(SINGLE_CYCLE_CORE_RTL) $(SINGLE_CYCLE_CORE_TESTBENCH)
+	mkdir -p $(SINGLE_CYCLE_CORE_OBJ_DIR)
+	$(VERILATOR) --cc --exe --build \
+		--top-module single_cycle_core \
+		--Mdir $(SINGLE_CYCLE_CORE_OBJ_DIR) \
+		$^
 
-# 检查模块化核心、拆分后的数据通路/控制模块以及两个内存模块。
-modular-lint:
-	$(VERILATOR) --lint-only --Wall $(MODULAR_SYSTEM_RTL)
+# ------------------------------
+# single_cycle_file_system：核心连接独立的文件初始化指令和数据内存。
+SINGLE_CYCLE_FILE_SYSTEM_RTL := $(SINGLE_CYCLE_CORE_RTL) \
+	rtl/memory/instruction_memory.sv rtl/memory/data_memory.sv \
+	rtl/single_cycle_modular/single_cycle_file_system.sv
+SINGLE_CYCLE_FILE_SYSTEM_TESTBENCH := sim/verilator/tb_single_cycle_files.cpp
+SINGLE_CYCLE_FILE_SYSTEM_IMAGES := sim/images/instruction.hex sim/images/data.hex
+SINGLE_CYCLE_FILE_SYSTEM_OBJ_DIR := $(BUILD_DIR)/single_cycle_file_system_obj_dir
+SINGLE_CYCLE_FILE_SYSTEM_SIM := $(SINGLE_CYCLE_FILE_SYSTEM_OBJ_DIR)/Vsingle_cycle_file_system
 
-# 在 single_cycle_core 上运行完整 RV64I 测试表，验证端口和数据通路模块化之后的
-# 架构行为，而不只是检查模块是否能够连接。
-modular-test: modular-build
-	$(MODULAR_CORE_SIM)
+single-cycle-file-system-model: $(SINGLE_CYCLE_FILE_SYSTEM_RTL)
+	mkdir -p $(SINGLE_CYCLE_FILE_SYSTEM_OBJ_DIR)
+	$(VERILATOR) --cc \
+		--top-module single_cycle_file_system \
+		--Mdir $(SINGLE_CYCLE_FILE_SYSTEM_OBJ_DIR) \
+		$^
 
-# 文件内存集成 smoke test。CPU 从 instruction.hex 取指，从 data.hex 加载数据，
-# 执行 ADDI，并把结果写回地址 0x100。
-file-memory-test: $(MODULAR_SYSTEM_SIM)
-	$(MODULAR_SYSTEM_SIM)
+single-cycle-file-system-test: $(SINGLE_CYCLE_FILE_SYSTEM_SIM)
+	$(SINGLE_CYCLE_FILE_SYSTEM_SIM)
 
-$(MODULAR_SYSTEM_SIM): $(MODULAR_SYSTEM_RTL) $(MODULAR_SYSTEM_TESTBENCH) \
-	sim/images/instruction.hex sim/images/data.hex
-	mkdir -p $(MODULAR_OBJ_DIR)
-	$(VERILATOR) --cc --exe --build --top-module single_cycle_file_system \
-		--Mdir $(MODULAR_OBJ_DIR) $(MODULAR_SYSTEM_RTL) $(MODULAR_SYSTEM_TESTBENCH)
+$(SINGLE_CYCLE_FILE_SYSTEM_SIM): $(SINGLE_CYCLE_FILE_SYSTEM_RTL) \
+		$(SINGLE_CYCLE_FILE_SYSTEM_TESTBENCH) $(SINGLE_CYCLE_FILE_SYSTEM_IMAGES)
+	mkdir -p $(SINGLE_CYCLE_FILE_SYSTEM_OBJ_DIR)
+	$(VERILATOR) --cc --exe --build \
+		--top-module single_cycle_file_system \
+		--Mdir $(SINGLE_CYCLE_FILE_SYSTEM_OBJ_DIR) \
+		$(SINGLE_CYCLE_FILE_SYSTEM_RTL) $(SINGLE_CYCLE_FILE_SYSTEM_TESTBENCH)
 
-# 五级流水线构建和回归测试使用与两个单周期实现相同的架构测试表，
-# 方便直接比较三种实现的行为。
-pipeline-build: $(PIPELINE_SIM)
+# ------------------------------
+# pipeline_cpu：经典 IF/ID/EX/MEM/WB 五级 RV64I 流水线。
+PIPELINE_CPU_RTL := rtl/common/alu.sv rtl/common/decoder.sv rtl/common/regfile.sv \
+	rtl/pipeline/pipeline_execute.sv rtl/pipeline/pipeline_writeback.sv \
+	rtl/pipeline/pipeline_memory_port.sv rtl/pipeline/pipeline_hazard.sv \
+	rtl/pipeline/pipeline_cpu.sv
+PIPELINE_CPU_TESTBENCH := sim/verilator/tb_pipeline.cpp sim/verilator/rv64i_tests.cpp
+PIPELINE_CPU_OBJ_DIR := $(BUILD_DIR)/pipeline_cpu_obj_dir
+PIPELINE_CPU_SIM := $(PIPELINE_CPU_OBJ_DIR)/Vpipeline_cpu
 
-$(PIPELINE_SIM): $(PIPELINE_RTL) $(PIPELINE_TESTBENCH)
-	mkdir -p $(PIPELINE_OBJ_DIR)
-	$(VERILATOR) --cc --exe --build --top-module pipeline_cpu \
-		--Mdir $(PIPELINE_OBJ_DIR) $(PIPELINE_RTL) $(PIPELINE_TESTBENCH)
+pipeline-cpu-model: $(PIPELINE_CPU_RTL)
+	mkdir -p $(PIPELINE_CPU_OBJ_DIR)
+	$(VERILATOR) --cc \
+		--top-module pipeline_cpu \
+		--Mdir $(PIPELINE_CPU_OBJ_DIR) \
+		$^
 
-# 检查 IF/ID/EX/MEM/WB 流水线以及冒险处理和前递模块。
-pipeline-lint:
-	$(VERILATOR) --lint-only --Wall $(PIPELINE_RTL)
+pipeline-cpu-test: $(PIPELINE_CPU_SIM)
+	$(PIPELINE_CPU_SIM)
 
-# 在五级流水线实现上运行完整 RV64I 架构回归测试。
-pipeline-test: pipeline-build
-	$(PIPELINE_SIM)
+$(PIPELINE_CPU_SIM): $(PIPELINE_CPU_RTL) $(PIPELINE_CPU_TESTBENCH)
+	mkdir -p $(PIPELINE_CPU_OBJ_DIR)
+	$(VERILATOR) --cc --exe --build \
+		--top-module pipeline_cpu \
+		--Mdir $(PIPELINE_CPU_OBJ_DIR) \
+		$^
 
-# 删除所有生成的 Verilator 模型和目标文件。
+# ------------------------------
+# 聚合入口只覆盖当前保留的模块化单周期、文件系统、单模块和流水线测试。
+lint:
+	$(VERILATOR) --lint-only --Wall $(SINGLE_CYCLE_FILE_SYSTEM_RTL)
+	$(VERILATOR) --lint-only --Wall $(PIPELINE_CPU_RTL)
+
+test: branch-unit-test pc-register-test next-pc-logic-test \
+	single-cycle-core-test single-cycle-file-system-test pipeline-cpu-test
+
 clean:
 	rm -rf $(BUILD_DIR)

@@ -1,2 +1,9 @@
 CompileFlags:
-  Add: [-Ibuild/obj_dir]
+  Add:
+    - -I/home/zhao/Workspace/rv64cpu/build/branch_unit_obj_dir
+    - -I/home/zhao/Workspace/rv64cpu/build/pc_register_obj_dir
+    - -I/home/zhao/Workspace/rv64cpu/build/next_pc_logic_obj_dir
+    - -I/home/zhao/Workspace/rv64cpu/build/single_cycle_core_obj_dir
+    - -I/home/zhao/Workspace/rv64cpu/build/single_cycle_file_system_obj_dir
+    - -I/home/zhao/Workspace/rv64cpu/build/pipeline_cpu_obj_dir
+    - -I/usr/share/verilator/include
