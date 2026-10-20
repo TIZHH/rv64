@@ -1,14 +1,13 @@
 # RV64 CPU Lab
 
-An educational RV64I processor implemented in SystemVerilog and verified with
-Verilator. Development proceeds from a single-cycle CPU to a classic five-stage
-pipeline.
+An educational RV64I single-cycle processor implemented in SystemVerilog and
+verified with Verilator. This branch contains the modular single-cycle design
+and its focused simulations.
 
 ## Current milestone
 
-The modular single-cycle RV64I implementation and PL-06 five-stage pipeline
-are implemented. The pipeline includes EX/MEM and MEM/WB forwarding, load-use
-stalls, and control-flow flushing.
+The modular single-cycle RV64I implementation is complete and split into
+focused datapath, control-flow, memory, and writeback modules.
 
 ## Requirements
 
@@ -27,14 +26,12 @@ make pc-register-test
 make next-pc-logic-test
 make single-cycle-core-test
 make single-cycle-file-system-test
-make pipeline-cpu-test
 ```
 
 `make test` builds and runs all retained Verilator tests. Each test also has a
 matching `*-model` target that generates its Verilator model without compiling
-the C++ testbench. `make single-cycle-core-test` and `make pipeline-cpu-test`
-run the same architectural RV64I programs through the modular single-cycle
-and five-stage implementations.
+the C++ testbench. `make single-cycle-core-test` runs the architectural RV64I
+regression through the modular single-cycle core.
 
 The `single_cycle_core` splits PC state, next-PC selection, branch comparison,
 memory formatting, and writeback into separate modules. The

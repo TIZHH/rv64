@@ -6,12 +6,11 @@ BUILD_DIR := build
 	pc-register-model pc-register-test \
 	next-pc-logic-model next-pc-logic-test \
 	single-cycle-core-model single-cycle-core-test \
-	single-cycle-file-system-model single-cycle-file-system-test \
-	pipeline-cpu-model pipeline-cpu-test
+	single-cycle-file-system-model single-cycle-file-system-test
 
 help:
 	@echo "可用目标:"
-	@echo "  make lint                           检查模块化单周期、文件内存和流水线 RTL"
+	@echo "  make lint                           检查模块化单周期和文件内存 RTL"
 	@echo "  make test                           运行下面列出的全部 Verilator 测试"
 	@echo "  make branch-unit-model              生成 branch_unit Verilator 模型"
 	@echo "  make branch-unit-test               测试六种 RV64I 分支比较"
@@ -23,8 +22,6 @@ help:
 	@echo "  make single-cycle-core-test          运行模块化单周期 RV64I 回归测试"
 	@echo "  make single-cycle-file-system-model  生成文件内存系统模型"
 	@echo "  make single-cycle-file-system-test   运行指令/数据镜像启动测试"
-	@echo "  make pipeline-cpu-model              生成五级流水线 CPU 模型"
-	@echo "  make pipeline-cpu-test               运行五级流水线 RV64I 回归测试"
 	@echo "  make clean                           删除生成的 Verilator 构建文件"
 
 # ------------------------------
@@ -155,40 +152,12 @@ $(SINGLE_CYCLE_FILE_SYSTEM_SIM): $(SINGLE_CYCLE_FILE_SYSTEM_RTL) \
 		$(SINGLE_CYCLE_FILE_SYSTEM_RTL) $(SINGLE_CYCLE_FILE_SYSTEM_TESTBENCH)
 
 # ------------------------------
-# pipeline_cpu：经典 IF/ID/EX/MEM/WB 五级 RV64I 流水线。
-PIPELINE_CPU_RTL := rtl/common/alu.sv rtl/common/decoder.sv rtl/common/regfile.sv \
-	rtl/pipeline/pipeline_execute.sv rtl/pipeline/pipeline_writeback.sv \
-	rtl/pipeline/pipeline_memory_port.sv rtl/pipeline/pipeline_hazard.sv \
-	rtl/pipeline/pipeline_cpu.sv
-PIPELINE_CPU_TESTBENCH := sim/verilator/tb_pipeline.cpp sim/verilator/rv64i_tests.cpp
-PIPELINE_CPU_OBJ_DIR := $(BUILD_DIR)/pipeline_cpu_obj_dir
-PIPELINE_CPU_SIM := $(PIPELINE_CPU_OBJ_DIR)/Vpipeline_cpu
-
-pipeline-cpu-model: $(PIPELINE_CPU_RTL)
-	mkdir -p $(PIPELINE_CPU_OBJ_DIR)
-	$(VERILATOR) --cc \
-		--top-module pipeline_cpu \
-		--Mdir $(PIPELINE_CPU_OBJ_DIR) \
-		$^
-
-pipeline-cpu-test: $(PIPELINE_CPU_SIM)
-	$(PIPELINE_CPU_SIM)
-
-$(PIPELINE_CPU_SIM): $(PIPELINE_CPU_RTL) $(PIPELINE_CPU_TESTBENCH)
-	mkdir -p $(PIPELINE_CPU_OBJ_DIR)
-	$(VERILATOR) --cc --exe --build \
-		--top-module pipeline_cpu \
-		--Mdir $(PIPELINE_CPU_OBJ_DIR) \
-		$^
-
-# ------------------------------
-# 聚合入口只覆盖当前保留的模块化单周期、文件系统、单模块和流水线测试。
+# 聚合入口只覆盖模块化单周期 CPU 及其文件内存系统测试。
 lint:
 	$(VERILATOR) --lint-only --Wall $(SINGLE_CYCLE_FILE_SYSTEM_RTL)
-	$(VERILATOR) --lint-only --Wall $(PIPELINE_CPU_RTL)
 
 test: branch-unit-test pc-register-test next-pc-logic-test \
-	single-cycle-core-test single-cycle-file-system-test pipeline-cpu-test
+	single-cycle-core-test single-cycle-file-system-test
 
 clean:
 	rm -rf $(BUILD_DIR)
