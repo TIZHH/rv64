@@ -6,9 +6,9 @@ pipeline.
 
 ## Current milestone
 
-The complete SC-08 single-cycle RV64I implementation and PL-06 five-stage
-pipeline are implemented. The pipeline includes EX/MEM and MEM/WB forwarding,
-load-use stalls, and control-flow flushing.
+The modular single-cycle RV64I implementation and PL-06 five-stage pipeline
+are implemented. The pipeline includes EX/MEM and MEM/WB forwarding, load-use
+stalls, and control-flow flushing.
 
 ## Requirements
 
@@ -33,13 +33,12 @@ make pipeline-cpu-test
 `make test` builds and runs all retained Verilator tests. Each test also has a
 matching `*-model` target that generates its Verilator model without compiling
 the C++ testbench. `make single-cycle-core-test` and `make pipeline-cpu-test`
-run the same architectural RV64I programs through the modular single-cycle and
-five-stage implementations.
+run the same architectural RV64I programs through the modular single-cycle
+and five-stage implementations.
 
-The original `single_cycle_cpu` remains the reference implementation. The
-new `single_cycle_core` keeps the same behavior but splits PC state, next-PC
-selection, branch comparison, memory formatting, and writeback into separate
-modules. `make single-cycle-file-system-test` runs the file-backed system
+The `single_cycle_core` splits PC state, next-PC selection, branch comparison,
+memory formatting, and writeback into separate modules. The
+`make single-cycle-file-system-test` target runs the file-backed system
 wrapper, which loads instructions from `sim/images/instruction.hex` and data
 bytes from `sim/images/data.hex`.
 

@@ -20,11 +20,10 @@ Verilator 进行构建和功能验证。
 实现 32 个 64 位整数寄存器。寄存器 `x0` 始终读取为零，对 `x0`
 的写操作会被忽略。
 
-### `rtl/single_cycle/single_cycle_cpu.sv`
+### `rtl/single_cycle_modular/`
 
-连接解码器、寄存器文件和 ALU，完成单周期取指、执行、访存、写回和
-下一条 PC 计算。该模块提供简单的指令和数据存储器接口，并输出非法
-指令状态和部分调试寄存器。
+将单周期 CPU 拆分为 PC、下一条 PC、分支判断、访存格式化、写回选择和
+核心数据通路等模块，完成单周期取指、执行、访存、写回和下一条 PC 计算。
 
 ### `rtl/pipeline/`
 
@@ -36,7 +35,7 @@ Verilator 进行构建和功能验证。
 - `pipeline_writeback.sv`：处理 MEM/WB 写回和加载扩展
 - `pipeline_memory_port.sv`：生成数据存储器读写信号
 
-### `sim/verilator/tb_single_cycle.cpp`
+### `sim/verilator/tb_single_cycle_modular.cpp`
 
 Verilator 仿真入口。它负责复位 CPU、驱动时钟、提供指令和数据、处理
 存储写掩码，并检查测试程序的最终结果。
@@ -60,8 +59,7 @@ make test
 ```
 
 `make lint` 使用 Verilator 检查 RTL；`make test` 会构建仿真程序并运行
-完整的单周期 RV64I 回归测试。`make pipeline-lint` 和
-`make pipeline-test` 分别检查和运行五级流水线。
+完整的模块化单周期及五级流水线回归测试。
 
 ## 当前范围
 

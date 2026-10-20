@@ -1,9 +1,7 @@
 # Modular Single-Cycle CPU
 
-The repository preserves the original single-cycle implementation in
-`rtl/single_cycle/single_cycle_cpu.sv`. The refactored implementation is in
-`rtl/single_cycle_modular/` and is intended to be easier to study one concern
-at a time.
+The modular single-cycle implementation is in `rtl/single_cycle_modular/` and
+is intended to be easier to study one concern at a time.
 
 ## Port naming convention
 
@@ -36,8 +34,8 @@ The convention is applied to:
 - `rtl/memory/*.sv`
 
 The shared modules `rtl/common/decoder.sv`, `rtl/common/alu.sv`, and
-`rtl/common/regfile.sv` are intentionally left unchanged because the legacy
-single-cycle top and the pipeline also instantiate them. At the core, their
+`rtl/common/regfile.sv` are intentionally left unchanged because the modular
+single-cycle core and the pipeline instantiate them. At the core, their
 connections still reveal direction through the net name, for example
 `.instruction(instruction_i)`.
 

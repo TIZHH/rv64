@@ -33,7 +33,7 @@
 rtl/common/alu.sv
 rtl/common/decoder.sv
 rtl/common/regfile.sv
-rtl/single_cycle/single_cycle_cpu.sv
+rtl/single_cycle_modular/*.sv
 ```
 
 ### 五级流水线 CPU
@@ -72,24 +72,17 @@ rtl/pipeline/pipeline_writeback.sv
 Verilator 测试台提供指令、数据和简单的字节寻址内存模型，通过最终存储
 结果检查 CPU 行为。
 
-单周期测试：
+模块化单周期测试：
 
 ```sh
 make lint
 make test
 ```
 
-流水线测试：
-
-```sh
-make pipeline-lint
-make pipeline-test
-```
-
 当前两套回归均通过：
 
 ```text
-PASS: all single-cycle RV64I tests
+PASS: all static modular single-cycle RV64I tests
 PASS: pipeline RV64I regression
 ```
 
