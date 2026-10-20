@@ -1,56 +1,57 @@
-# 当前代码介绍
+# Pipeline Code Overview
 
-本项目目前已经完成单周期 RV64I CPU 和五级流水线 RV64I CPU，并使用
-Verilator 进行构建和功能验证。
+本分支只包含五级流水线 RV64I CPU 及其 Verilator 仿真代码。
 
-## 代码结构
+## 共享模块
 
 ### `rtl/common/alu.sv`
 
 实现整数算术、逻辑、比较和移位运算，同时支持 RV64I 的 32 位 `W`
-类运算。`W` 类指令只处理低 32 位，并将结果符号扩展到 64 位。
+类运算。
 
 ### `rtl/common/decoder.sv`
 
-解析 32 位 RISC-V 指令，生成寄存器写回、访存、分支、跳转、ALU
-操作和立即数等控制信号。非法或未实现的编码不会产生有效写回。
+解析 32 位 RISC-V 指令并生成寄存器写回、访存、分支、跳转、ALU 操作和
+立即数等控制信号。
 
 ### `rtl/common/regfile.sv`
 
-实现 32 个 64 位整数寄存器。寄存器 `x0` 始终读取为零，对 `x0`
-的写操作会被忽略。
+实现 32 个 64 位整数寄存器。寄存器 `x0` 始终读取为零，对 `x0` 的写操作
+会被忽略。
 
-### `rtl/single_cycle/single_cycle_cpu.sv`
+## 流水线模块
 
-连接解码器、寄存器文件和 ALU，完成单周期取指、执行、访存、写回和
-下一条 PC 计算。该模块提供简单的指令和数据存储器接口，并输出非法
-指令状态和部分调试寄存器。
+### `rtl/pipeline/pipeline_cpu.sv`
 
-### `rtl/pipeline/`
+保存 IF/ID、ID/EX、EX/MEM、MEM/WB 状态，并连接五个流水线阶段。
 
-包含五级流水线实现：
+### `rtl/pipeline/pipeline_execute.sv`
 
-- `pipeline_cpu.sv`：保存 IF/ID、ID/EX、EX/MEM、MEM/WB 状态
-- `pipeline_execute.sv`：EX 阶段 ALU、前递和分支目标计算
-- `pipeline_hazard.sv`：检测 load-use 依赖并请求停顿
-- `pipeline_writeback.sv`：处理 MEM/WB 写回和加载扩展
-- `pipeline_memory_port.sv`：生成数据存储器读写信号
+实现 EX 阶段 ALU、数据前递、分支判断和跳转目标计算。
 
-### `sim/verilator/tb_single_cycle.cpp`
+### `rtl/pipeline/pipeline_hazard.sv`
 
-Verilator 仿真入口。它负责复位 CPU、驱动时钟、提供指令和数据、处理
-存储写掩码，并检查测试程序的最终结果。
+检测 load-use 数据冒险并请求流水线停顿。
+
+### `rtl/pipeline/pipeline_memory_port.sv`
+
+根据访存大小和地址生成数据存储器读写信号及 byte mask。
+
+### `rtl/pipeline/pipeline_writeback.sv`
+
+处理 MEM/WB 阶段的加载扩展和写回数据选择。
+
+## 仿真
+
+### `sim/verilator/tb_pipeline.cpp`
+
+Verilator 仿真入口，负责驱动时钟、提供指令、模拟数据内存并检查最终
+存储结果。
 
 ### `sim/verilator/rv64i_tests.cpp`
 
-包含 RV64I 测试程序及机器码编码辅助函数，覆盖：
-
-- 寄存器和立即数 ALU 指令
-- `LUI` 与 `AUIPC`
-- 分支、`JAL` 和 `JALR`
-- 字节、半字、字和双字加载/存储
-- RV64I `W` 类指令
-- 非法指令可见性
+包含 RV64I 测试程序和机器码编码辅助函数，覆盖算术、立即数、分支、跳转、
+加载、存储、`W` 类指令、非法指令以及流水线数据依赖场景。
 
 ## 构建与测试
 
@@ -58,12 +59,3 @@ Verilator 仿真入口。它负责复位 CPU、驱动时钟、提供指令和数
 make lint
 make test
 ```
-
-`make lint` 使用 Verilator 检查 RTL；`make test` 会构建仿真程序并运行
-完整的单周期 RV64I 回归测试。`make pipeline-lint` 和
-`make pipeline-test` 分别检查和运行五级流水线。
-
-## 当前范围
-
-目前只实现 RV64I 基础整数指令集、单周期架构和五级流水线。CSR、中断、
-特权模式、缓存、虚拟内存、乘除法扩展和外设均不在当前范围内。

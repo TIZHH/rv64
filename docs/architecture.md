@@ -1,84 +1,59 @@
-# Architecture
+# Pipeline Architecture
 
 ## Current design
 
-The project contains three CPU-facing entry points: `single_cycle_cpu` is the
-original reference architecture, `single_cycle_core` is an equivalent modular
-single-cycle implementation, and `pipeline_cpu` is a five-stage
-IF/ID/EX/MEM/WB implementation. All use the shared decoder, ALU, and register
-file. The original single-cycle top is preserved as a learning/reference
-version.
+This branch contains one CPU-facing entry point:
 
-The modular single-cycle path separates the following responsibilities:
+```text
+pipeline_cpu
+```
 
-- `pc_register.sv`: reset and sequential PC state;
-- `next_pc_logic.sv`: sequential, branch, JAL, and JALR target selection;
-- `branch_unit.sv`: signed and unsigned branch comparisons;
-- `memory_access.sv`: load extension and store byte-mask generation;
-- `writeback_mux.sv`: ALU, load, link, LUI, and AUIPC writeback selection;
-- `single_cycle_core.sv`: datapath wiring and instruction-level control.
+The CPU uses the classic five stages:
 
-Every port in `rtl/single_cycle_modular/`, `rtl/memory/`, and `rtl/pipeline/`
-carries a directional suffix (`*_i` for input, `*_o` for output) so an
-instantiation is readable without opening the module. The shared
-`rtl/common/` modules keep their original port names because the legacy
-single-cycle top and the pipeline also instantiate them.
+```text
+IF → ID → EX → MEM → WB
+```
 
-`single_cycle_file_system.sv` connects that core to separate file-backed
-instruction and data memories. The default instruction memory contains 256
-32-bit words, and the default data memory contains 4096 bytes. Both are
-initialized with `$readmemh`; the data image is byte-oriented and supports
-`@address` markers.
+Explicit pipeline registers are maintained between stages:
 
-The file-backed system uses separate instruction and data address spaces rather
-than one unified physical map:
+```text
+IF/ID → ID/EX → EX/MEM → MEM/WB
+```
 
-| Space | Default range | Addressing | Source |
-| --- | --- | --- | --- |
-| Instruction | `0x0000` - `0x03fc` | 32-bit words at 4-byte PC increments | `sim/images/instruction.hex` |
-| Data | `0x0000` - `0x0fff` | Bytes, with load/store masks | `sim/images/data.hex` |
+The shared `rtl/common/` modules provide the decoder, ALU, and register file.
+The `rtl/pipeline/` modules implement the pipeline datapath, forwarding,
+hazard detection, memory-port formatting, and writeback.
 
-Reset sets the PC to `0x0000`. Instruction address `PC` selects word
-`PC >> 2`, so the first three image entries execute at `0x0000`, `0x0004`, and
-`0x0008`. The default data image places byte `0x05` at address `0x0080`; the
-file-backed smoke program writes its result at `0x0100`, which is also the
-default debug observation address. Identical numeric addresses in the two
-spaces do not conflict because instruction and data storage are separate.
+## Hazards and control flow
 
-On a rising clock edge:
+The EX stage accepts forwarded values from EX/MEM and MEM/WB. The ID stage also
+has a writeback bypass for register reads occurring in the same cycle as a
+writeback.
 
-- reset sets the PC to zero;
-- otherwise the decoded instruction writes architectural state and the PC takes
-  the sequential or control-flow target.
+Load-use dependencies are detected in ID. The hazard unit holds the PC and
+IF/ID register and inserts a bubble into ID/EX for one cycle.
 
-The Verilator C++ testbenches supply instruction words to both single-cycle
-cores, model byte-addressed memory, and check the resulting stores. The
-file-backed smoke test exercises the system wrapper without a C++ instruction
-loader. This keeps architectural behavior observable without adding a bus
-protocol or cache.
+Branches and jumps are resolved in EX. A taken control-flow instruction updates
+the PC and flushes younger instructions in IF/ID and ID/EX.
 
-The pipeline resolves branches and jumps in EX, forwards results from EX/MEM and
-MEM/WB, and inserts a bubble for a load-use dependency.
+## Memory interface
 
-## Planned structure
+`pipeline_cpu` does not contain a cache or a memory array. It exposes separate
+instruction and data interfaces:
 
-- `rtl/common/`: reusable datapath modules
-- `rtl/single_cycle/`: single-cycle CPU integration
-- `rtl/pipeline/`: five-stage implementation and hazard units
-- `sim/verilator/`: Verilator testbench code
-- `tests/asm/`: focused assembly tests added with instruction support
+- `instruction_i`: instruction supplied for the current PC;
+- `data_*`: byte-addressed data read/write interface with an eight-bit write
+  mask.
 
-## Supported instructions
+The Verilator C++ testbench supplies instructions from each test program and
+models a 4096-byte data memory. This is a simulation model, not an integrated
+instruction/data memory subsystem.
 
-The implementation supports the RV64I base integer instruction groups:
+## Repository structure
 
-- `ADD`, `SUB`, shifts, signed/unsigned compares, and bitwise register ALU
-- immediate ALU operations and immediate shifts
-- `LUI` and `AUIPC`
-- `JAL`, `JALR`, and all six conditional branches
-- `LB`, `LH`, `LW`, `LD`, `LBU`, `LHU`, and `LWU`
-- `SB`, `SH`, `SW`, and `SD`
-- `ADDIW`, immediate word shifts, and register word ALU operations
-
-Alignment exceptions, privilege features, CSRs, interrupts, and excluded
-extensions remain out of scope.
+```text
+rtl/common/       shared ALU, decoder, and register file
+rtl/pipeline/     five-stage pipeline RTL
+sim/verilator/    pipeline testbench and RV64I test programs
+docs/             pipeline documentation
+```
